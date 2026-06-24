@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/"
+  to = "/budget-calculator.html"
+  status = 200
