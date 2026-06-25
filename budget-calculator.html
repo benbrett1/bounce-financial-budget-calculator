@@ -35,7 +35,13 @@ body{font-family:'Avenir Next','Nunito Sans',-apple-system,BlinkMacSystemFont,'S
 .period-label{display:inline-block;margin:8px 18px 2px;padding:2px 8px;background:#fff8ee;color:#f68b1f;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
 .irow{display:grid;grid-template-columns:1fr 130px 120px;gap:7px;align-items:center;padding:7px 18px;border-bottom:1px solid #fafafa}
 .irow:last-child{border-bottom:none}
-.irow label{font-size:0.82rem;color:#374151}
+.irow label{font-size:0.82rem;color:#374151;display:flex;align-items:center;gap:5px}
+.tip{position:relative;display:inline-flex}
+.tip-icon{width:15px;height:15px;border-radius:50%;background:#e0e0e0;color:#666;font-size:0.65rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;cursor:default;flex-shrink:0;line-height:1}
+.tip-icon:hover{background:#ffca38;color:#1a1a1a}
+.tip-box{display:none;position:fixed;background:#1a1a1a;color:#fff;font-size:0.75rem;font-weight:400;border-radius:6px;padding:7px 11px;white-space:nowrap;pointer-events:none;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.tip-box::after{content:'';position:absolute;top:100%;left:var(--arrow-left,50%);transform:translateX(-50%);border:5px solid transparent;border-top-color:#1a1a1a}
+.tip-box[style*="--arrow-top"]::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#1a1a1a}
 .irow input[type=number]{border:1px solid #e5e5e5;border-radius:7px;padding:6px 8px 6px 20px;font-size:0.82rem;width:100%;text-align:right;color:#1a1a1a;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14'%3E%3Ctext y='12' font-size='12' fill='%2394a3b8'%3E%24%3C/text%3E%3C/svg%3E") no-repeat 6px center}
 .irow input[type=number]:focus{outline:none;border-color:#ffca38;box-shadow:0 0 0 3px rgba(255,202,56,0.2)}
 .irow select{border:1px solid #e5e5e5;border-radius:7px;padding:6px 6px;font-size:0.75rem;color:#666;background:#fafafa;width:100%}
@@ -259,8 +265,9 @@ function freqSelect(id,def){
 }
 
 function buildInputRow(f){
+  const tipHtml = f.tip ? `<span class="tip"><span class="tip-icon">?</span><span class="tip-box">${f.tip}</span></span>` : '';
   return `<div class="irow">
-    <label for="${f.id}">${f.label}</label>
+    <label for="${f.id}">${f.label}${tipHtml}</label>
     <input type="number" id="${f.id}" min="0" step="0.01" placeholder="0.00" oninput="calculate()">
     ${freqSelect(f.id,f.freq)}
   </div>`;
@@ -359,7 +366,7 @@ function buildApp(){
       <div class="card-head"><h3>Household Bills (Annual)</h3><span class="st" id="st_grp_bills">$0 / yr</span></div>
       <div class="card-body">
         ${buildInputRow({id:'hm_gas',label:'Gas',freq:'annual'})}
-        ${buildInputRow({id:'hm_elec',label:'Electricity',freq:'annual'})}
+        ${buildInputRow({id:'hm_elec',label:'Electricity',freq:'annual',tip:'The average cost of electricity is $2,500 per annum.'})}
         ${buildInputRow({id:'hm_water',label:'Water Bills',freq:'annual'})}
         ${buildInputRow({id:'hm_contents_ins',label:'Contents / Home Insurance',freq:'annual'})}
         ${buildInputRow({id:'hm_maintenance',label:'Home Maintenance',freq:'annual'})}
@@ -952,6 +959,39 @@ function exportExcel(){
 
   XLSX.writeFile(wb,`BudgetCalculator_${client.replace(/\s+/g,'_')}_${today.replace(/\//g,'-')}.xlsx`);
 }
+
+// Tooltip positioning
+document.addEventListener('mouseover', e => {
+  const icon = e.target.closest('.tip-icon');
+  if (!icon) return;
+  const box = icon.parentElement.querySelector('.tip-box');
+  if (!box) return;
+  box.style.display = 'block';
+  const ir = icon.getBoundingClientRect();
+  const br = box.getBoundingClientRect();
+  let left = ir.left + ir.width / 2 - br.width / 2;
+  let top = ir.top - br.height - 7;
+  // clamp horizontally
+  left = Math.max(8, Math.min(left, window.innerWidth - br.width - 8));
+  // flip below if clipped at top
+  if (top < 8) {
+    top = ir.bottom + 7;
+    box.style.setProperty('--arrow-top', '1');
+  } else {
+    box.style.removeProperty('--arrow-top');
+  }
+  box.style.left = left + 'px';
+  box.style.top = top + 'px';
+  // reposition arrow to point at icon
+  const arrowLeft = ir.left + ir.width / 2 - left;
+  box.style.setProperty('--arrow-left', arrowLeft + 'px');
+});
+document.addEventListener('mouseout', e => {
+  if (e.target.closest('.tip-icon')) {
+    const box = e.target.closest('.tip')?.querySelector('.tip-box');
+    if (box) box.style.display = 'none';
+  }
+});
 
 // Init
 buildApp();
