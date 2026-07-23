@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Budget Calculator | Bounce Financial</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 38 38' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='38' height='38' rx='9' fill='%231a1a1a'/%3E%3Crect x='6' y='24' width='6' height='9' rx='2' fill='%23ffca38'/%3E%3Crect x='16' y='18' width='6' height='15' rx='2' fill='%23f68b1f'/%3E%3Crect x='26' y='12' width='6' height='21' rx='2' fill='%23ee3780'/%3E%3Ccircle cx='29' cy='9.5' r='2.5' fill='%23ffca38'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -33,7 +34,8 @@ body{font-family:'Avenir Next','Nunito Sans',-apple-system,BlinkMacSystemFont,'S
 .card-head h3{font-size:0.85rem;font-weight:700;color:#1a1a1a}
 .card-head .st{font-size:0.82rem;font-weight:700;color:#f68b1f}
 .period-label{display:inline-block;margin:8px 18px 2px;padding:2px 8px;background:#fff8ee;color:#f68b1f;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
-.irow{display:grid;grid-template-columns:1fr 130px 120px;gap:7px;align-items:center;padding:7px 18px;border-bottom:1px solid #fafafa}
+.irow{display:grid;grid-template-columns:1fr minmax(0,130px) minmax(0,120px);gap:7px;align-items:center;padding:7px 18px;border-bottom:1px solid #fafafa}
+[data-lastpass-icon-root],[data-lastpass-root],[data-lastpass-icon-root] *{display:none!important;width:0!important;height:0!important;position:absolute!important}
 .irow:last-child{border-bottom:none}
 .irow label{font-size:0.82rem;color:#374151;display:flex;align-items:center;gap:5px}
 .tip{position:relative;display:inline-flex}
@@ -42,9 +44,11 @@ body{font-family:'Avenir Next','Nunito Sans',-apple-system,BlinkMacSystemFont,'S
 .tip-box{display:none;position:fixed;background:#1a1a1a;color:#fff;font-size:0.75rem;font-weight:400;border-radius:6px;padding:7px 11px;white-space:nowrap;pointer-events:none;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
 .tip-box::after{content:'';position:absolute;top:100%;left:var(--arrow-left,50%);transform:translateX(-50%);border:5px solid transparent;border-top-color:#1a1a1a}
 .tip-box[style*="--arrow-top"]::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#1a1a1a}
-.irow input[type=number]{border:1px solid #e5e5e5;border-radius:7px;padding:6px 8px 6px 20px;font-size:0.82rem;width:100%;text-align:right;color:#1a1a1a;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14'%3E%3Ctext y='12' font-size='12' fill='%2394a3b8'%3E%24%3C/text%3E%3C/svg%3E") no-repeat 6px center}
-.irow input[type=number]:focus{outline:none;border-color:#ffca38;box-shadow:0 0 0 3px rgba(255,202,56,0.2)}
-.irow select{border:1px solid #e5e5e5;border-radius:7px;padding:6px 6px;font-size:0.75rem;color:#666;background:#fafafa;width:100%}
+.irow input[type=number],.irow input[type=text]{border:1px solid #e5e5e5;border-radius:7px;padding:6px 8px 6px 20px;font-size:0.82rem;width:100%;min-width:0;text-align:right;color:#1a1a1a;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14'%3E%3Ctext y='12' font-size='12' fill='%2394a3b8'%3E%24%3C/text%3E%3C/svg%3E") no-repeat 6px center;-moz-appearance:textfield;box-sizing:border-box}
+.irow input[type=number]::-webkit-inner-spin-button,.irow input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.irow input[type=number]:focus,.irow input[type=text]:focus{outline:none;border-color:#ffca38;box-shadow:0 0 0 3px rgba(255,202,56,0.2)}
+.irow-inner{display:flex;align-items:center;gap:5px;min-width:0}
+.irow select{border:1px solid #e5e5e5;border-radius:7px;padding:6px 6px;font-size:0.75rem;color:#666;background:#fafafa;width:100%;min-width:0}
 .irow select:focus{outline:none;border-color:#ffca38}
 .total-row{display:grid;grid-template-columns:1fr 130px 120px;gap:7px;align-items:center;padding:10px 18px;background:#fff8ee;border-top:2px solid #ffca38}
 .total-row span:first-child{font-size:0.82rem;font-weight:600;color:#1a1a1a}
@@ -79,20 +83,79 @@ body{font-family:'Avenir Next','Nunito Sans',-apple-system,BlinkMacSystemFont,'S
 .nbtn.prim{background:#f68b1f;border-color:#f68b1f;color:#fff}
 .nbtn.prim:hover{background:#e07a10}
 .step-txt{font-size:0.75rem;color:#999}
+/* Pre-tax calculator */
+.pretax-card{background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:16px;overflow:hidden;border:2px solid #ffca38}
+.pretax-head{background:#1a1a1a;padding:11px 18px;display:flex;align-items:center;justify-content:space-between}
+.pretax-head h3{font-size:0.85rem;font-weight:700;color:#ffca38}
+.pretax-head .fy-badge{font-size:0.7rem;color:rgba(255,255,255,0.5);font-weight:500}
+.pretax-body{padding:16px 18px}
+.pretax-input-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.pretax-input-row label{font-size:0.82rem;color:#374151;white-space:nowrap}
+.pretax-input-row input{border:1px solid #e5e5e5;border-radius:7px;padding:7px 8px 7px 22px;font-size:0.9rem;font-weight:600;flex:1;color:#1a1a1a;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14'%3E%3Ctext y='12' font-size='12' fill='%2394a3b8'%3E%24%3C/text%3E%3C/svg%3E") no-repeat 7px center;-moz-appearance:textfield}
+.pretax-input-row input::-webkit-inner-spin-button,.pretax-input-row input::-webkit-outer-spin-button{-webkit-appearance:none}
+.pretax-input-row input:focus{outline:none;border-color:#ffca38;box-shadow:0 0 0 3px rgba(255,202,56,0.2)}
+.pretax-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.pretax-stat{background:#fafafa;border-radius:8px;padding:10px 12px;border:1px solid #f0f0f0}
+.pretax-stat.net{background:#fff8ee;border-color:#ffca38}
+.pretax-stat .ps-label{font-size:0.68rem;color:#888;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:3px}
+.pretax-stat .ps-val{font-size:1rem;font-weight:700;color:#1a1a1a}
+.pretax-stat.net .ps-val{color:#f68b1f}
+.pretax-stat .ps-sub{font-size:0.7rem;color:#aaa;margin-top:1px}
+.pretax-use-btn{background:#f68b1f;color:#fff;border:none;padding:8px 16px;border-radius:7px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:background 0.15s}
+.pretax-use-btn:hover{background:#e07a10}
+.pretax-inspect-btn{background:none;border:1px solid #e5e5e5;color:#888;padding:8px 14px;border-radius:7px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.15s}
+.pretax-inspect-btn:hover{border-color:#f68b1f;color:#f68b1f}
+.pretax-divider{border:none;border-top:1px solid #f0f0f0;margin:12px 0}
+.rates-table{width:100%;border-collapse:collapse;font-size:0.78rem}
+.rates-table th{text-align:left;padding:6px 10px;background:#fafafa;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #f0f0f0}
+.rates-table td{padding:7px 10px;border-bottom:1px solid #fafafa;color:#374151}
+.rates-table tr:last-child td{border-bottom:none}
+.rates-table .rate-val{font-weight:700;color:#f68b1f}
+.rates-table .highlight td{background:#fff8ee}
+.rates-note{font-size:0.72rem;color:#aaa;margin-top:10px}
+.def-icon{background:#f0f0f0;cursor:pointer;font-size:0.7rem}
+.def-icon:hover{background:#ffca38;color:#1a1a1a}
+.add-row-wrap{padding:10px 18px}
+.add-row-btn{background:none;border:1px dashed #ccc;color:#aaa;border-radius:7px;padding:6px 14px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.add-row-btn:hover{border-color:#f68b1f;color:#f68b1f}
+.remove-row-btn{background:none;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0}
+.remove-row-btn:hover{color:#ee3780}
+.editable-label{border-bottom:1px dashed #ccc;cursor:text;outline:none;min-width:60px;display:inline-block;white-space:nowrap;overflow:hidden}
+.editable-label:hover{border-bottom-color:#f68b1f}
+.editable-label:focus{border-bottom:1px solid #f68b1f;color:#1a1a1a}
 .info-box{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:0.8rem;color:#92400e}
+.header-actions{display:flex;align-items:center;gap:8px}
+.hdr-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:7px;color:#fff;padding:6px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit}
+.hdr-btn:hover{background:rgba(255,202,56,0.2);border-color:#ffca38;color:#ffca38}
+.hdr-btn-load{display:inline-flex;align-items:center;cursor:pointer}
+.hdr-btn-new{border-color:rgba(238,55,128,0.5);color:rgba(255,255,255,0.8)}
+.hdr-btn-new:hover{background:rgba(238,55,128,0.2);border-color:#ee3780;color:#ee3780}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div>
-    <div class="h1">Budget Calculator</div>
-    <h1>Budget Calculator</h1>
-    <div class="sub">Bounce Financial</div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <svg width="44" height="44" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+      <rect width="38" height="38" rx="9" fill="#111"/>
+      <rect x="6"  y="24" width="6" height="9"  rx="2" fill="#ffca38"/>
+      <rect x="16" y="18" width="6" height="15" rx="2" fill="#f68b1f"/>
+      <rect x="26" y="12" width="6" height="21" rx="2" fill="#ee3780"/>
+      <circle cx="29" cy="9.5" r="2.5" fill="#ffca38"/>
+    </svg>
+    <div>
+      <h1>Budget Calculator</h1>
+      <div class="sub">Bounce Financial</div>
+    </div>
   </div>
   <div class="client-wrap">
     <label>Client Name:</label>
     <input type="text" id="clientName" placeholder="Enter name..." oninput="updateClientName()">
+  </div>
+  <div class="header-actions">
+    <button class="hdr-btn" onclick="saveSession()">⬇ Save</button>
+    <label class="hdr-btn hdr-btn-load">⬆ Load<input type="file" accept=".json" onchange="loadSession(event)" style="display:none"></label>
+    <button class="hdr-btn hdr-btn-new" onclick="newSession()">＋ New Client</button>
   </div>
 </div>
 
@@ -122,21 +185,17 @@ const PANELS = {
   income: {
     title:'Income',
     groups:[
-      {title:'Your Salary', id:'grp_your', fields:[
-        {id:'y_takehome',label:'Your take home pay',freq:'fortnightly'},
-        {id:'y_bonus',label:'Bonus / Overtime',freq:'fortnightly'},
-        {id:'y_centrelink',label:'Centrelink / Government Benefits',freq:'fortnightly'},
-        {id:'y_investments',label:'Earnings from Investments',freq:'fortnightly'},
-        {id:'y_other1',label:'Other Income',freq:'fortnightly'},
-        {id:'y_other2',label:'Other Income',freq:'fortnightly'},
+      {title:'Your Salary', id:'grp_your', dynId:'dyn-income-you-rows', dynLabel:'Other Income', dynFreq:'annual', dynBtnLabel:'+ Add income', fields:[
+        {id:'y_takehome',label:'Your take home pay',freq:'annual'},
+        {id:'y_bonus',label:'Bonus / Overtime',freq:'annual'},
+        {id:'y_centrelink',label:'Centrelink / Government Benefits',freq:'annual'},
+        {id:'y_investments',label:'Earnings from Investments',freq:'annual'},
       ]},
-      {title:"Partner's Salary", id:'grp_partner', fields:[
-        {id:'p_takehome',label:'Take home pay',freq:'fortnightly'},
-        {id:'p_bonus',label:'Bonus / Overtime',freq:'fortnightly'},
-        {id:'p_centrelink',label:'Centrelink / Government Benefits',freq:'fortnightly'},
-        {id:'p_investments',label:'Earnings from Investments',freq:'fortnightly'},
-        {id:'p_other1',label:'Other Income',freq:'fortnightly'},
-        {id:'p_other2',label:'Other Income',freq:'fortnightly'},
+      {title:"Partner's Salary", id:'grp_partner', dynId:'dyn-income-partner-rows', dynLabel:'Other Income', dynFreq:'annual', dynBtnLabel:'+ Add income', fields:[
+        {id:'p_takehome',label:'Take home pay',freq:'annual'},
+        {id:'p_bonus',label:'Bonus / Overtime',freq:'annual'},
+        {id:'p_centrelink',label:'Centrelink / Government Benefits',freq:'annual'},
+        {id:'p_investments',label:'Earnings from Investments',freq:'annual'},
       ]},
     ]
   },
@@ -148,100 +207,74 @@ const PANELS = {
         {id:'d_cc2',label:'Credit Card 2',freq:'fortnightly'},
         {id:'d_pl1',label:'Personal Loan 1',freq:'fortnightly'},
         {id:'d_pl2',label:'Personal Loan 2',freq:'fortnightly'},
-        {id:'d_zip',label:'ZipPay / Afterpay',freq:'fortnightly'},
-        {id:'d_other1',label:'Other Debts',freq:'fortnightly'},
-        {id:'d_other2',label:'Other Debts',freq:'fortnightly'},
-        {id:'d_other3',label:'Other Debts',freq:'fortnightly'},
+        {id:'d_bnpl',label:'ZipPay / Afterpay',freq:'fortnightly'},
       ]},
     ]
   },
   selfcare: {
     title:'Self Care',
     groups:[
-      {title:'Self Care — Fortnightly', id:'grp_sc1', fields:[
+      {title:'Self Care — Fortnightly', id:'grp_sc1', dynId:'dyn-sc1-rows', dynFreq:'fortnightly', fields:[
         {id:'sc_mani',label:'Manicure / Pedicure',freq:'fortnightly'},
         {id:'sc_facial',label:'Facials',freq:'fortnightly'},
         {id:'sc_massage',label:'Massage',freq:'fortnightly'},
         {id:'sc_lashes',label:'Lashes / Brows',freq:'fortnightly'},
         {id:'sc_makeup',label:'Makeup',freq:'fortnightly'},
-        {id:'sc_other1',label:'Other Expenses',freq:'fortnightly'},
-        {id:'sc_other2',label:'Other Expenses',freq:'fortnightly'},
       ]},
-      {title:'Self Care — Annual / Less Frequent', id:'grp_sc2', fields:[
+      {title:'Self Care — Annual / Less Frequent', id:'grp_sc2', dynId:'dyn-sc2-rows', dynFreq:'annual', fields:[
         {id:'sc_haircuts',label:'Haircuts',freq:'annual'},
         {id:'sc_botox',label:'Botox',freq:'annual'},
         {id:'sc_laser',label:'Laser Treatments',freq:'annual'},
         {id:'sc_cosmetic',label:'Cosmetic Treatments',freq:'annual'},
-        {id:'sc_other3',label:'Other Expenses',freq:'annual'},
-        {id:'sc_other4',label:'Other Expenses',freq:'annual'},
-        {id:'sc_other5',label:'Other Expenses',freq:'annual'},
       ]},
     ]
   },
   pets: {
     title:'Pets',
     groups:[
-      {title:'Pets — Regular Expenses', id:'grp_pets1', fields:[
+      {title:'Pets — Regular Expenses', id:'grp_pets1', dynId:'dyn-pets1-rows', dynFreq:'fortnightly', fields:[
         {id:'pt_food',label:'Pet Food',freq:'fortnightly'},
         {id:'pt_insurance',label:'Pet Insurance',freq:'fortnightly'},
         {id:'pt_medication',label:'Pet Medication',freq:'fortnightly'},
         {id:'pt_wash',label:'Dog Wash / Cleaning',freq:'fortnightly'},
         {id:'pt_daycare',label:'Pet Daycare',freq:'fortnightly'},
-        {id:'pt_other1',label:'Other Expenses',freq:'fortnightly'},
       ]},
-      {title:'Pets — Annual / Vet Expenses', id:'grp_pets2', fields:[
+      {title:'Pets — Annual / Vet Expenses', id:'grp_pets2', dynId:'dyn-pets2-rows', dynFreq:'annual', fields:[
         {id:'pt_vet',label:'Yearly Vet Check',freq:'annual'},
         {id:'pt_flea',label:'Flea / Heartworm Treatments',freq:'annual'},
         {id:'pt_vaccinations',label:'Vaccinations',freq:'annual'},
         {id:'pt_dental',label:'Dental Check',freq:'annual'},
         {id:'pt_registration',label:'Pet Registration',freq:'annual'},
-        {id:'pt_other2',label:'Other Expenses',freq:'annual'},
-        {id:'pt_other3',label:'Other Expenses',freq:'annual'},
       ]},
     ]
   },
   education: {
     title:'Education',
     groups:[
-      {title:'Education — Regular Expenses', id:'grp_ed1', fields:[
+      {title:'Education — Regular Expenses', id:'grp_ed1', dynId:'dyn-ed1-rows', dynFreq:'fortnightly', fields:[
         {id:'ed_stationary',label:'Stationary',freq:'fortnightly'},
         {id:'ed_travel',label:'Travel / Parking',freq:'fortnightly'},
-        {id:'ed_other1',label:'Other Expenses',freq:'fortnightly'},
-        {id:'ed_other2',label:'Other Expenses',freq:'fortnightly'},
-        {id:'ed_other3',label:'Other Expenses',freq:'fortnightly'},
-        {id:'ed_other4',label:'Other Expenses',freq:'fortnightly'},
       ]},
-      {title:'Education — Annual Expenses', id:'grp_ed2', fields:[
+      {title:'Education — Annual Expenses', id:'grp_ed2', dynId:'dyn-ed2-rows', dynFreq:'annual', fields:[
         {id:'ed_course',label:'Course Fees',freq:'annual'},
         {id:'ed_books',label:'Text Books',freq:'annual'},
-        {id:'ed_other5',label:'Other Expenses',freq:'annual'},
-        {id:'ed_other6',label:'Other Expenses',freq:'annual'},
-        {id:'ed_other7',label:'Other Expenses',freq:'annual'},
-        {id:'ed_other8',label:'Other Expenses',freq:'annual'},
-        {id:'ed_other9',label:'Other Expenses',freq:'annual'},
       ]},
     ]
   },
   health: {
     title:'Health',
     groups:[
-      {title:'Health — Regular Expenses', id:'grp_h1', fields:[
+      {title:'Health — Regular Expenses', id:'grp_h1', dynId:'dyn-h1-rows', dynFreq:'fortnightly', fields:[
         {id:'h_medication',label:'Medication',freq:'fortnightly'},
         {id:'h_insurance',label:'Health Insurance',freq:'fortnightly'},
         {id:'h_gym',label:'Gym Membership',freq:'fortnightly'},
         {id:'h_pt',label:'Personal Training',freq:'fortnightly'},
         {id:'h_counselling',label:'Counselling',freq:'fortnightly'},
         {id:'h_physio',label:'Physiotherapy / Chiropractor',freq:'fortnightly'},
-        {id:'h_other1',label:'Other Expenses',freq:'fortnightly'},
       ]},
-      {title:'Health — Annual Expenses', id:'grp_h2', fields:[
+      {title:'Health — Annual Expenses', id:'grp_h2', dynId:'dyn-h2-rows', dynFreq:'annual', fields:[
         {id:'h_life_ins',label:'Life Insurance',freq:'annual'},
         {id:'h_medical_fund',label:'Medical Fund',freq:'annual'},
-        {id:'h_other2',label:'Other Expenses',freq:'annual'},
-        {id:'h_other3',label:'Other Expenses',freq:'annual'},
-        {id:'h_other4',label:'Other Expenses',freq:'annual'},
-        {id:'h_other5',label:'Other Expenses',freq:'annual'},
-        {id:'h_other6',label:'Other Expenses',freq:'annual'},
       ]},
     ]
   },
@@ -250,9 +283,13 @@ const PANELS = {
 // Frequency multipliers to annual
 const MULT = {weekly:52,fortnightly:26,monthly:12,annual:1,quarterly:4};
 
-function v(id){return parseFloat(document.getElementById(id)?.value)||0;}
+function rawVal(id){const el=document.getElementById(id);if(!el)return 0;return parseFloat((el.value||'').replace(/[,$]/g,''))||0;}
+function v(id){return rawVal(id);}
 function f(id){return document.getElementById('f_'+id)?.value||'fortnightly';}
 function ann(id){return v(id)*MULT[f(id)];}
+function onAmountInput(el){el.dataset.raw=(el.value||'').replace(/[,$]/g,'');calculate();}
+function onAmountFocus(el){el.value=el.dataset.raw||'';}
+function onAmountBlur(el){const n=parseFloat((el.value||'').replace(/[,$]/g,''));if(n){el.dataset.raw=n;el.value='$'+n.toLocaleString('en-AU');}else{el.dataset.raw='';el.value='';}}
 function fmt(n){return '$'+Math.round(n).toLocaleString();}
 function fmtDec(n){return (n*100).toFixed(1)+'%';}
 
@@ -266,21 +303,26 @@ function freqSelect(id,def){
 
 function buildInputRow(f){
   const tipHtml = f.tip ? `<span class="tip"><span class="tip-icon">?</span><span class="tip-box">${f.tip}</span></span>` : '';
+  const labelHtml = f.editable
+    ? `<span contenteditable="true" spellcheck="false" class="editable-label" data-placeholder="${f.label}">${f.label}</span>`
+    : `${f.label}${tipHtml}`;
+  const defaultBtn = f.default ? `<span class="tip"><span class="tip-icon def-icon" onclick="setDefault('${f.id}',${f.default})">↓</span><span class="tip-box">Use default: $${f.default.toLocaleString('en-AU')}</span></span>` : '';
   return `<div class="irow">
-    <label for="${f.id}">${f.label}${tipHtml}</label>
-    <input type="number" id="${f.id}" min="0" step="0.01" placeholder="0.00" oninput="calculate()">
+    <label for="${f.id}">${labelHtml}${defaultBtn}</label>
+    <input type="text" inputmode="decimal" id="${f.id}" placeholder="0" autocomplete="off" data-lpignore="true" data-form-type="other" oninput="onAmountInput(this)" onfocus="onAmountFocus(this)" onblur="onAmountBlur(this)">
     ${freqSelect(f.id,f.freq)}
   </div>`;
 }
 
 function buildGroup(g){
   const rows = g.fields.map(buildInputRow).join('');
+  const dynSection = g.dynId ? `<div id="${g.dynId}"></div><div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('${g.dynId}','${g.dynLabel||'Other Expenses'}','${g.dynFreq||'fortnightly'}')">${g.dynBtnLabel||'+ Add expense'}</button></div>` : '';
   return `<div class="card">
     <div class="card-head">
       <h3>${g.title}</h3>
       <span class="st" id="st_${g.id}">$0 / yr</span>
     </div>
-    <div class="card-body">${rows}</div>
+    <div class="card-body">${rows}${dynSection}</div>
     <div class="total-row">
       <span>Annual Total</span>
       <span class="tv" id="tv_${g.id}">$0</span>
@@ -322,8 +364,38 @@ function buildApp(){
   // INCOME
   html += `<div class="panel active" id="panel-income">
     <div class="sec-title">Income</div>
-    ${buildGroup({title:'Your Salary',id:'grp_your',fields:PANELS.income.groups[0].fields})}
-    ${buildGroup({title:"Partner's Salary",id:'grp_partner',fields:PANELS.income.groups[1].fields})}
+    <div class="pretax-card">
+      <div class="pretax-head">
+        <h3>Pre-Tax Income Calculator</h3>
+        <span class="fy-badge" id="pretax-fy">Loading rates…</span>
+      </div>
+      <div class="pretax-body">
+        <div class="pretax-input-row">
+          <label for="pretax-gross">Gross annual salary</label>
+          <input type="number" id="pretax-gross" placeholder="0" oninput="calcPreTax()">
+        </div>
+        <div class="pretax-results" id="pretax-results" style="display:none">
+          <div class="pretax-stat"><div class="ps-label">Income Tax</div><div class="ps-val" id="pt-tax">—</div></div>
+          <div class="pretax-stat"><div class="ps-label">Medicare Levy</div><div class="ps-val" id="pt-medicare">—</div></div>
+          <div class="pretax-stat"><div class="ps-label">Tax Offsets (LITO)</div><div class="ps-val" id="pt-lito">—</div></div>
+          <div class="pretax-stat net"><div class="ps-label">Take-Home Pay</div><div class="ps-val" id="pt-net">—</div><div class="ps-sub" id="pt-net-sub">—</div></div>
+        </div>
+        <div id="pretax-actions" style="display:none">
+          <hr class="pretax-divider">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <button class="pretax-use-btn" onclick="usePreTaxNet('y')">→ Your Take-Home Pay</button>
+            <button class="pretax-use-btn" onclick="usePreTaxNet('p')" style="background:#ee3780">→ Partner's Take-Home Pay</button>
+            <button class="pretax-inspect-btn" onclick="toggleRatesTable()">View tax rates ▾</button>
+          </div>
+        </div>
+        <div id="pretax-rates-table" style="display:none">
+          <hr class="pretax-divider">
+          <div id="pretax-rates-content"></div>
+        </div>
+      </div>
+    </div>
+    ${buildGroup(PANELS.income.groups[0])}
+    ${buildGroup(PANELS.income.groups[1])}
     <div class="nav-btns"><span></span><span class="step-txt">Step 1 of ${TABS.length}</span><button class="nbtn prim" onclick="showPanel('home')">Next →</button></div>
   </div>`;
 
@@ -342,10 +414,8 @@ function buildApp(){
         <div class="card-head"><h3>Renter Expenses</h3><span class="st" id="st_grp_renter">$0 / yr</span></div>
         <div class="card-body">
           ${buildInputRow({id:'hm_rent',label:'Rent',freq:'fortnightly'})}
-          ${buildInputRow({id:'hm_r_other1',label:'Other Expenses',freq:'fortnightly'})}
-          ${buildInputRow({id:'hm_r_other2',label:'Other Expenses',freq:'fortnightly'})}
-          ${buildInputRow({id:'hm_r_other3',label:'Other Expenses',freq:'fortnightly'})}
-          ${buildInputRow({id:'hm_r_other4',label:'Other Expenses',freq:'fortnightly'})}
+          <div id="dyn-home-renter-rows"></div>
+          <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-home-renter-rows','Other Expenses','fortnightly')">+ Add expense</button></div>
         </div>
         <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_renter">$0</span><span></span></div>
       </div>
@@ -355,9 +425,8 @@ function buildApp(){
         <div class="card-head"><h3>Home Owner Expenses</h3><span class="st" id="st_grp_owner">$0 / yr</span></div>
         <div class="card-body">
           ${buildInputRow({id:'hm_mortgage',label:'Mortgage Repayments',freq:'fortnightly'})}
-          ${buildInputRow({id:'hm_o_other1',label:'Other Expenses',freq:'fortnightly'})}
-          ${buildInputRow({id:'hm_o_other2',label:'Other Expenses',freq:'fortnightly'})}
-          ${buildInputRow({id:'hm_o_other3',label:'Other Expenses',freq:'fortnightly'})}
+          <div id="dyn-home-owner-rows"></div>
+          <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-home-owner-rows','Other Expenses','fortnightly')">+ Add expense</button></div>
         </div>
         <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_owner">$0</span><span></span></div>
       </div>
@@ -365,19 +434,18 @@ function buildApp(){
     <div class="card">
       <div class="card-head"><h3>Household Bills (Annual)</h3><span class="st" id="st_grp_bills">$0 / yr</span></div>
       <div class="card-body">
-        ${buildInputRow({id:'hm_gas',label:'Gas',freq:'annual'})}
-        ${buildInputRow({id:'hm_elec',label:'Electricity',freq:'annual',tip:'The average cost of electricity is $2,500 per annum.'})}
-        ${buildInputRow({id:'hm_water',label:'Water Bills',freq:'annual'})}
-        ${buildInputRow({id:'hm_contents_ins',label:'Contents / Home Insurance',freq:'annual'})}
-        ${buildInputRow({id:'hm_maintenance',label:'Home Maintenance',freq:'annual'})}
-        ${buildInputRow({id:'hm_rates',label:'Council Rates',freq:'annual'})}
+        ${buildInputRow({id:'hm_gas',label:'Gas',freq:'annual',tip:'The average cost of gas is $800 – $1,000 per annum.',default:1000})}
+        ${buildInputRow({id:'hm_elec',label:'Electricity',freq:'annual',tip:'The average cost of electricity is $2,500 – $3,500 per annum.',default:3000})}
+        ${buildInputRow({id:'hm_water',label:'Water Bills',freq:'annual',tip:'The average cost of water is $1,500 – $2,500 per annum.',default:2000})}
+        ${buildInputRow({id:'hm_contents_ins',label:'Contents / Home Insurance',freq:'annual',tip:'The average cost of contents / home insurance is $3,000 – $5,000 per annum.',default:4000})}
+        ${buildInputRow({id:'hm_maintenance',label:'Home Maintenance',freq:'annual',default:2500})}
+        ${buildInputRow({id:'hm_rates',label:'Council Rates',freq:'annual',tip:'The average cost of council rates is $2,000 – $4,000 per annum.',default:3000})}
         ${buildInputRow({id:'hm_body_corp',label:'Body Corporate',freq:'annual'})}
-        ${buildInputRow({id:'hm_pool',label:'Pool Expenses',freq:'annual'})}
-        ${buildInputRow({id:'hm_garden',label:'Garden Expenses',freq:'annual'})}
-        ${buildInputRow({id:'hm_improvement',label:'Home Improvement / Furniture',freq:'annual'})}
-        ${buildInputRow({id:'hm_other1',label:'Other Expenses',freq:'annual'})}
-        ${buildInputRow({id:'hm_other2',label:'Other Expenses',freq:'annual'})}
-        ${buildInputRow({id:'hm_other3',label:'Other Expenses',freq:'annual'})}
+        ${buildInputRow({id:'hm_pool',label:'Pool Expenses',freq:'annual',default:500})}
+        ${buildInputRow({id:'hm_garden',label:'Garden Expenses',freq:'annual',default:500})}
+        ${buildInputRow({id:'hm_improvement',label:'Home Improvement / Furniture',freq:'annual',default:2500})}
+        <div id="dyn-home-bills-rows"></div>
+        <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-home-bills-rows','Other Expenses','annual')">+ Add expense</button></div>
       </div>
       <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_bills">$0</span><span></span></div>
     </div>
@@ -385,7 +453,25 @@ function buildApp(){
   </div>`;
 
   // DEBTS
-  html += buildStandardPanel('debts');
+  html += `<div class="panel" id="panel-debts">
+    <div class="sec-title">Debts</div>
+    <div class="card">
+      <div class="card-head"><h3>Debt Repayments</h3><span class="st" id="st_grp_debts">$0 / yr</span></div>
+      <div class="card-body">
+        ${buildInputRow({id:'d_cc1',label:'Credit Card 1',freq:'fortnightly'})}
+        ${buildInputRow({id:'d_cc2',label:'Credit Card 2',freq:'fortnightly'})}
+        ${buildInputRow({id:'d_pl1',label:'Personal Loan 1',freq:'fortnightly'})}
+        ${buildInputRow({id:'d_pl2',label:'Personal Loan 2',freq:'fortnightly'})}
+        ${buildInputRow({id:'d_bnpl',label:'ZipPay / Afterpay',freq:'fortnightly'})}
+        <div id="dyn-debts-rows"></div>
+        <div class="add-row-wrap">
+          <button class="add-row-btn" onclick="addDebtRow()">+ Add another debt</button>
+        </div>
+      </div>
+      <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_debts">$0</span><span></span></div>
+    </div>
+    ${buildNavBtns('home','investment',3)}
+  </div>`;
 
   // INVESTMENT PROPERTY
   html += `<div class="panel" id="panel-investment">
@@ -428,9 +514,8 @@ function buildApp(){
       <div class="card-body">
         ${buildInputRow({id:'tr_uber',label:'Uber / Taxi',freq:'fortnightly'})}
         ${buildInputRow({id:'tr_public',label:'Public Transport',freq:'fortnightly'})}
-        ${buildInputRow({id:'tr_t_other1',label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:'tr_t_other2',label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:'tr_t_other3',label:'Other Expenses',freq:'fortnightly'})}
+        <div id="dyn-transit-rows"></div>
+        <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-transit-rows','Other Expenses','fortnightly')">+ Add expense</button></div>
       </div>
       <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_transit">$0</span><span></span></div>
     </div>
@@ -446,15 +531,10 @@ function buildApp(){
         ${buildInputRow({id:'ls_entertainment',label:'Entertainment / Fun Money',freq:'fortnightly'})}
         ${buildInputRow({id:'ls_smoking',label:'Smoking',freq:'fortnightly'})}
         ${buildInputRow({id:'ls_gambling',label:'Gambling',freq:'fortnightly'})}
-        ${buildInputRow({id:'ls_other1',label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:'ls_other2',label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:'ls_other3',label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:'ls_other4',label:'Other Expenses',freq:'fortnightly'})}
         ${buildInputRow({id:'ls_clothing',label:'Clothing',freq:'annual'})}
         ${buildInputRow({id:'ls_memberships',label:'Memberships / Associations',freq:'annual'})}
-        ${buildInputRow({id:'ls_other5',label:'Other Expenses',freq:'annual'})}
-        ${buildInputRow({id:'ls_other6',label:'Other Expenses',freq:'annual'})}
-        ${buildInputRow({id:'ls_other7',label:'Other Expenses',freq:'annual'})}
+        <div id="dyn-ls-you-rows"></div>
+        <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-ls-you-rows','Other Expenses','fortnightly')">+ Add expense</button></div>
       </div>
       <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_ls_you">$0</span><span></span></div>
     </div>
@@ -464,15 +544,10 @@ function buildApp(){
         ${buildInputRow({id:'lsp_entertainment',label:'Entertainment / Fun Money',freq:'fortnightly'})}
         ${buildInputRow({id:'lsp_smoking',label:'Smoking',freq:'fortnightly'})}
         ${buildInputRow({id:'lsp_gambling',label:'Gambling',freq:'fortnightly'})}
-        ${buildInputRow({id:'lsp_other1',label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:'lsp_other2',label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:'lsp_other3',label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:'lsp_other4',label:'Other Expenses',freq:'fortnightly'})}
         ${buildInputRow({id:'lsp_clothing',label:'Clothing',freq:'annual'})}
         ${buildInputRow({id:'lsp_memberships',label:'Memberships / Associations',freq:'annual'})}
-        ${buildInputRow({id:'lsp_other5',label:'Other Expenses',freq:'annual'})}
-        ${buildInputRow({id:'lsp_other6',label:'Other Expenses',freq:'annual'})}
-        ${buildInputRow({id:'lsp_other7',label:'Other Expenses',freq:'annual'})}
+        <div id="dyn-ls-partner-rows"></div>
+        <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-ls-partner-rows','Other Expenses','fortnightly')">+ Add expense</button></div>
       </div>
       <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_ls_partner">$0</span><span></span></div>
     </div>
@@ -514,8 +589,8 @@ function buildInvestmentCard(n){
       ${buildInputRow({id:`ip${n}_pool`,label:'Pool Expenses',freq:'annual'})}
       ${buildInputRow({id:`ip${n}_garden`,label:'Garden Expenses',freq:'annual'})}
       ${buildInputRow({id:`ip${n}_insurance`,label:'Insurance',freq:'annual'})}
-      ${buildInputRow({id:`ip${n}_other1`,label:'Other Expenses',freq:'annual'})}
-      ${buildInputRow({id:`ip${n}_other2`,label:'Other Expenses',freq:'annual'})}
+      <div id="dyn-ip${n}-rows"></div>
+      <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-ip${n}-rows','Other Expenses','annual')">+ Add expense</button></div>
     </div>
     <div class="total-row"><span>Net Annual Cost (Expenses − Income)</span><span class="tv" id="tv_grp_ip${n}">$0</span><span></span></div>
   </div>`;
@@ -531,17 +606,14 @@ function buildChildCard(n){
         ${buildInputRow({id:`ch${n}_sport`,label:"Children's Sport",freq:'fortnightly'})}
         ${buildInputRow({id:`ch${n}_afterschool`,label:'After School Care',freq:'fortnightly'})}
         ${buildInputRow({id:`ch${n}_activities`,label:'Child Activities',freq:'fortnightly'})}
-        ${buildInputRow({id:`ch${n}_other1`,label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:`ch${n}_other2`,label:'Other Expenses',freq:'fortnightly'})}
-        ${buildInputRow({id:`ch${n}_other3`,label:'Other Expenses',freq:'fortnightly'})}
         <div class="period-label">Annual</div>
         ${buildInputRow({id:`ch${n}_schoolstart`,label:'Start of School Year Expenses',freq:'annual'})}
         ${buildInputRow({id:`ch${n}_fees`,label:'School Fees',freq:'annual'})}
         ${buildInputRow({id:`ch${n}_health`,label:'Health / Medical',freq:'annual'})}
         ${buildInputRow({id:`ch${n}_clothes`,label:'Clothes',freq:'annual'})}
         ${buildInputRow({id:`ch${n}_support`,label:'Child Support Payments',freq:'annual'})}
-        ${buildInputRow({id:`ch${n}_other4`,label:'Other Expenses',freq:'annual'})}
-        ${buildInputRow({id:`ch${n}_other5`,label:'Other Expenses',freq:'annual'})}
+        <div id="dyn-ch${n}-rows"></div>
+        <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-ch${n}-rows','Other Expenses','fortnightly')">+ Add expense</button></div>
       </div>
       <div class="total-row"><span>Annual Total — Child ${n}</span><span class="tv" id="tv_grp_ch${n}">$0</span><span></span></div>
     </div>
@@ -558,14 +630,13 @@ function buildTransportCard(n){
       ${buildInputRow({id:`v${n}_tolls`,label:'Tolls and Parking',freq:'fortnightly'})}
       ${buildInputRow({id:`v${n}_loan`,label:'Car Loan',freq:'fortnightly'})}
       ${buildInputRow({id:`v${n}_wash`,label:'Car Wash',freq:'fortnightly'})}
-      ${buildInputRow({id:`v${n}_other1`,label:'Other Expenses',freq:'fortnightly'})}
-      ${buildInputRow({id:`v${n}_other2`,label:'Other Expenses',freq:'fortnightly'})}
       <div class="period-label">Annual</div>
       ${buildInputRow({id:`v${n}_insurance`,label:'Car Insurance',freq:'annual'})}
       ${buildInputRow({id:`v${n}_rego`,label:'Car Registration',freq:'annual'})}
       ${buildInputRow({id:`v${n}_service`,label:'Car Servicing',freq:'annual'})}
       ${buildInputRow({id:`v${n}_accessories`,label:'Car Accessories',freq:'annual'})}
-      ${buildInputRow({id:`v${n}_other3`,label:'Other Expenses',freq:'annual'})}
+      <div id="dyn-v${n}-rows"></div>
+      <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-v${n}-rows','Other Expenses','fortnightly')">+ Add expense</button></div>
     </div>
     <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_v${n}">$0</span><span></span></div>
   </div>`;
@@ -604,6 +675,10 @@ function showPanel(id){
 
 function sumIds(ids){ return ids.reduce((s,id)=>s+ann(id),0); }
 
+function dynIds(containerId){
+  return Array.from(document.querySelectorAll('#'+containerId+' .irow input[type=text]')).map(el=>el.id);
+}
+
 function calcGroup(gid, ids){
   const total = sumIds(ids);
   const el = document.getElementById('tv_'+gid);
@@ -615,23 +690,23 @@ function calcGroup(gid, ids){
 
 function calculate(){
   // Income
-  const yourIncome = calcGroup('grp_your',['y_takehome','y_bonus','y_centrelink','y_investments','y_other1','y_other2']);
-  const partnerIncome = calcGroup('grp_partner',['p_takehome','p_bonus','p_centrelink','p_investments','p_other1','p_other2']);
+  const yourIncome = calcGroup('grp_your',['y_takehome','y_bonus','y_centrelink','y_investments',...dynIds('dyn-income-you-rows')]);
+  const partnerIncome = calcGroup('grp_partner',['p_takehome','p_bonus','p_centrelink','p_investments',...dynIds('dyn-income-partner-rows')]);
   const totalIncome = yourIncome + partnerIncome;
 
   // Home
-  const renterTotal = calcGroup('grp_renter',['hm_rent','hm_r_other1','hm_r_other2','hm_r_other3','hm_r_other4']);
-  const ownerTotal = calcGroup('grp_owner',['hm_mortgage','hm_o_other1','hm_o_other2','hm_o_other3']);
-  const billsTotal = calcGroup('grp_bills',['hm_gas','hm_elec','hm_water','hm_contents_ins','hm_maintenance','hm_rates','hm_body_corp','hm_pool','hm_garden','hm_improvement','hm_other1','hm_other2','hm_other3']);
+  const renterTotal = calcGroup('grp_renter',['hm_rent',...dynIds('dyn-home-renter-rows')]);
+  const ownerTotal = calcGroup('grp_owner',['hm_mortgage',...dynIds('dyn-home-owner-rows')]);
+  const billsTotal = calcGroup('grp_bills',['hm_gas','hm_elec','hm_water','hm_contents_ins','hm_maintenance','hm_rates','hm_body_corp','hm_pool','hm_garden','hm_improvement',...dynIds('dyn-home-bills-rows')]);
   const homeTotal = (homeType==='renter'?renterTotal:ownerTotal) + billsTotal;
 
   // Debts
-  const debtsTotal = calcGroup('grp_debts',['d_cc1','d_cc2','d_pl1','d_pl2','d_zip','d_other1','d_other2','d_other3']);
+  const debtsTotal = calcGroup('grp_debts',['d_cc1','d_cc2','d_pl1','d_pl2','d_bnpl',...dynIds('dyn-debts-rows')]);
 
   // Investment Property
   function calcIP(n){
     const income = ann(`ip${n}_rent`);
-    const expenses = sumIds([`ip${n}_mgmt`,`ip${n}_mortgage`,`ip${n}_body`,`ip${n}_maint`,`ip${n}_water`,`ip${n}_rates`,`ip${n}_pool`,`ip${n}_garden`,`ip${n}_insurance`,`ip${n}_other1`,`ip${n}_other2`]);
+    const expenses = sumIds([`ip${n}_mgmt`,`ip${n}_mortgage`,`ip${n}_body`,`ip${n}_maint`,`ip${n}_water`,`ip${n}_rates`,`ip${n}_pool`,`ip${n}_garden`,`ip${n}_insurance`,...dynIds(`dyn-ip${n}-rows`)]);
     const net = expenses - income;
     const el = document.getElementById(`tv_grp_ip${n}`);
     const st = document.getElementById(`st_grp_ip${n}`);
@@ -642,37 +717,37 @@ function calculate(){
   const ipTotal = Math.max(0,calcIP(1)) + Math.max(0,calcIP(2));
 
   // Self Care
-  const scTotal = calcGroup('grp_sc1',['sc_mani','sc_facial','sc_massage','sc_lashes','sc_makeup','sc_other1','sc_other2'])
-                + calcGroup('grp_sc2',['sc_haircuts','sc_botox','sc_laser','sc_cosmetic','sc_other3','sc_other4','sc_other5']);
+  const scTotal = calcGroup('grp_sc1',['sc_mani','sc_facial','sc_massage','sc_lashes','sc_makeup',...dynIds('dyn-sc1-rows')])
+                + calcGroup('grp_sc2',['sc_haircuts','sc_botox','sc_laser','sc_cosmetic',...dynIds('dyn-sc2-rows')]);
 
   // Children
   let childrenTotal = 0;
   for(let n=1;n<=5;n++){
-    const ct = calcGroup(`grp_ch${n}`,[`ch${n}_childcare`,`ch${n}_sport`,`ch${n}_afterschool`,`ch${n}_activities`,`ch${n}_other1`,`ch${n}_other2`,`ch${n}_other3`,`ch${n}_schoolstart`,`ch${n}_fees`,`ch${n}_health`,`ch${n}_clothes`,`ch${n}_support`,`ch${n}_other4`,`ch${n}_other5`]);
+    const ct = calcGroup(`grp_ch${n}`,[`ch${n}_childcare`,`ch${n}_sport`,`ch${n}_afterschool`,`ch${n}_activities`,`ch${n}_schoolstart`,`ch${n}_fees`,`ch${n}_health`,`ch${n}_clothes`,`ch${n}_support`,...dynIds(`dyn-ch${n}-rows`)]);
     if(n<=numChildren) childrenTotal += ct;
   }
 
   // Pets
-  const petsTotal = calcGroup('grp_pets1',['pt_food','pt_insurance','pt_medication','pt_wash','pt_daycare','pt_other1'])
-                  + calcGroup('grp_pets2',['pt_vet','pt_flea','pt_vaccinations','pt_dental','pt_registration','pt_other2','pt_other3']);
+  const petsTotal = calcGroup('grp_pets1',['pt_food','pt_insurance','pt_medication','pt_wash','pt_daycare',...dynIds('dyn-pets1-rows')])
+                  + calcGroup('grp_pets2',['pt_vet','pt_flea','pt_vaccinations','pt_dental','pt_registration',...dynIds('dyn-pets2-rows')]);
 
   // Education
-  const edTotal = calcGroup('grp_ed1',['ed_stationary','ed_travel','ed_other1','ed_other2','ed_other3','ed_other4'])
-                + calcGroup('grp_ed2',['ed_course','ed_books','ed_other5','ed_other6','ed_other7','ed_other8','ed_other9']);
+  const edTotal = calcGroup('grp_ed1',['ed_stationary','ed_travel',...dynIds('dyn-ed1-rows')])
+                + calcGroup('grp_ed2',['ed_course','ed_books',...dynIds('dyn-ed2-rows')]);
 
   // Health
-  const healthTotal = calcGroup('grp_h1',['h_medication','h_insurance','h_gym','h_pt','h_counselling','h_physio','h_other1'])
-                    + calcGroup('grp_h2',['h_life_ins','h_medical_fund','h_other2','h_other3','h_other4','h_other5','h_other6']);
+  const healthTotal = calcGroup('grp_h1',['h_medication','h_insurance','h_gym','h_pt','h_counselling','h_physio',...dynIds('dyn-h1-rows')])
+                    + calcGroup('grp_h2',['h_life_ins','h_medical_fund',...dynIds('dyn-h2-rows')]);
 
   // Transport
-  const v1Total = calcGroup('grp_v1',['v1_petrol','v1_tolls','v1_loan','v1_wash','v1_other1','v1_other2','v1_insurance','v1_rego','v1_service','v1_accessories','v1_other3']);
-  const v2Total = calcGroup('grp_v2',['v2_petrol','v2_tolls','v2_loan','v2_wash','v2_other1','v2_other2','v2_insurance','v2_rego','v2_service','v2_accessories','v2_other3']);
-  const transitTotal = calcGroup('grp_transit',['tr_uber','tr_public','tr_t_other1','tr_t_other2','tr_t_other3']);
+  const v1Total = calcGroup('grp_v1',['v1_petrol','v1_tolls','v1_loan','v1_wash','v1_insurance','v1_rego','v1_service','v1_accessories',...dynIds('dyn-v1-rows')]);
+  const v2Total = calcGroup('grp_v2',['v2_petrol','v2_tolls','v2_loan','v2_wash','v2_insurance','v2_rego','v2_service','v2_accessories',...dynIds('dyn-v2-rows')]);
+  const transitTotal = calcGroup('grp_transit',['tr_uber','tr_public',...dynIds('dyn-transit-rows')]);
   const transportTotal = v1Total + v2Total + transitTotal;
 
   // Lifestyle
-  const lsYouTotal = calcGroup('grp_ls_you',['ls_entertainment','ls_smoking','ls_gambling','ls_other1','ls_other2','ls_other3','ls_other4','ls_clothing','ls_memberships','ls_other5','ls_other6','ls_other7']);
-  const lsPartnerTotal = calcGroup('grp_ls_partner',['lsp_entertainment','lsp_smoking','lsp_gambling','lsp_other1','lsp_other2','lsp_other3','lsp_other4','lsp_clothing','lsp_memberships','lsp_other5','lsp_other6','lsp_other7']);
+  const lsYouTotal = calcGroup('grp_ls_you',['ls_entertainment','ls_smoking','ls_gambling','ls_clothing','ls_memberships',...dynIds('dyn-ls-you-rows')]);
+  const lsPartnerTotal = calcGroup('grp_ls_partner',['lsp_entertainment','lsp_smoking','lsp_gambling','lsp_clothing','lsp_memberships',...dynIds('dyn-ls-partner-rows')]);
   const lifestyleTotal = lsYouTotal + lsPartnerTotal;
 
   const totalExpenses = homeTotal + debtsTotal + ipTotal + scTotal + childrenTotal + petsTotal + edTotal + healthTotal + transportTotal + lifestyleTotal;
@@ -762,9 +837,12 @@ function exportExcel(){
   }
   function capFreq(f){ return f?f.charAt(0).toUpperCase()+f.slice(1):''; }
   function getF(id){
-    const val  = parseFloat(document.getElementById(id)?.value)||0;
+    const el   = document.getElementById(id);
+    const val  = parseFloat(el?.value)||0;
     const freq = document.getElementById('f_'+id)?.value||'fortnightly';
-    const lbl  = document.querySelector(`label[for="${id}"]`)?.textContent?.trim()||id;
+    let lbl = document.querySelector(`label[for="${id}"]`)?.textContent?.trim();
+    if(!lbl) lbl = el?.closest('.irow')?.querySelector('label')?.textContent?.trim();
+    if(!lbl) lbl = id;
     return {lbl,val,freq,ann:val*MULT[freq]};
   }
 
@@ -818,30 +896,30 @@ function exportExcel(){
 
   // ── Income ──────────────────────────────────────────────────────────
   const {ws:wsIncome,total:incTotal}=buildSheet('Income',[
-    {title:"Your Salary",      fields:['y_takehome','y_bonus','y_centrelink','y_investments','y_other1','y_other2']},
-    {title:"Partner's Salary", fields:['p_takehome','p_bonus','p_centrelink','p_investments','p_other1','p_other2']},
+    {title:"Your Salary",      fields:['y_takehome','y_bonus','y_centrelink','y_investments',...dynIds('dyn-income-you-rows')]},
+    {title:"Partner's Salary", fields:['p_takehome','p_bonus','p_centrelink','p_investments',...dynIds('dyn-income-partner-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsIncome,'Income');
 
   // ── Home Expenses ───────────────────────────────────────────────────
   const homeSec=homeType==='renter'
-    ?{title:'Renter Expenses',     fields:['hm_rent','hm_r_other1','hm_r_other2','hm_r_other3','hm_r_other4']}
-    :{title:'Home Owner Expenses', fields:['hm_mortgage','hm_o_other1','hm_o_other2','hm_o_other3']};
+    ?{title:'Renter Expenses',     fields:['hm_rent',...dynIds('dyn-home-renter-rows')]}
+    :{title:'Home Owner Expenses', fields:['hm_mortgage',...dynIds('dyn-home-owner-rows')]};
   const {ws:wsHome,total:homeExpTotal}=buildSheet('Home Expenses',[
     homeSec,
-    {title:'Household Bills',fields:['hm_gas','hm_elec','hm_water','hm_contents_ins','hm_maintenance','hm_rates','hm_body_corp','hm_pool','hm_garden','hm_improvement','hm_other1','hm_other2','hm_other3']},
+    {title:'Household Bills',fields:['hm_gas','hm_elec','hm_water','hm_contents_ins','hm_maintenance','hm_rates','hm_body_corp','hm_pool','hm_garden','hm_improvement',...dynIds('dyn-home-bills-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsHome,'Home Expenses');
 
   // ── Debts ───────────────────────────────────────────────────────────
   const {ws:wsDebts,total:debtsExpTotal}=buildSheet('Debts',[
-    {title:'Debt Repayments',fields:['d_cc1','d_cc2','d_pl1','d_pl2','d_zip','d_other1','d_other2','d_other3']},
+    {title:'Debt Repayments',fields:['d_cc1','d_cc2','d_pl1','d_pl2','d_bnpl',...dynIds('dyn-debts-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsDebts,'Debts');
 
   // ── Investment Property ─────────────────────────────────────────────
   function buildIPSec(n){
-    const expIds=[`ip${n}_mgmt`,`ip${n}_mortgage`,`ip${n}_body`,`ip${n}_maint`,`ip${n}_water`,`ip${n}_rates`,`ip${n}_pool`,`ip${n}_garden`,`ip${n}_insurance`,`ip${n}_other1`,`ip${n}_other2`];
+    const expIds=[`ip${n}_mgmt`,`ip${n}_mortgage`,`ip${n}_body`,`ip${n}_maint`,`ip${n}_water`,`ip${n}_rates`,`ip${n}_pool`,`ip${n}_garden`,`ip${n}_insurance`,...dynIds(`dyn-ip${n}-rows`)];
     const rentF=getF(`ip${n}_rent`);
     const incAnn=rentF.ann, expAnn=expIds.reduce((s,id)=>s+getF(id).ann,0), netCost=Math.max(0,expAnn-incAnn);
     const cr=[];
@@ -859,51 +937,51 @@ function exportExcel(){
 
   // ── Self Care ───────────────────────────────────────────────────────
   const {ws:wsSC,total:scExpTotal}=buildSheet('Self Care',[
-    {title:'Regular Expenses',       fields:['sc_mani','sc_facial','sc_massage','sc_lashes','sc_makeup','sc_other1','sc_other2']},
-    {title:'Annual / Less Frequent', fields:['sc_haircuts','sc_botox','sc_laser','sc_cosmetic','sc_other3','sc_other4','sc_other5']},
+    {title:'Regular Expenses',       fields:['sc_mani','sc_facial','sc_massage','sc_lashes','sc_makeup',...dynIds('dyn-sc1-rows')]},
+    {title:'Annual / Less Frequent', fields:['sc_haircuts','sc_botox','sc_laser','sc_cosmetic',...dynIds('dyn-sc2-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsSC,'Self Care');
 
   // ── Children ────────────────────────────────────────────────────────
   const childSecs=[];
-  for(let n=1;n<=numChildren;n++) childSecs.push({title:`Child ${n}`,fields:[`ch${n}_childcare`,`ch${n}_sport`,`ch${n}_afterschool`,`ch${n}_activities`,`ch${n}_other1`,`ch${n}_other2`,`ch${n}_other3`,`ch${n}_schoolstart`,`ch${n}_fees`,`ch${n}_health`,`ch${n}_clothes`,`ch${n}_support`,`ch${n}_other4`,`ch${n}_other5`]});
+  for(let n=1;n<=numChildren;n++) childSecs.push({title:`Child ${n}`,fields:[`ch${n}_childcare`,`ch${n}_sport`,`ch${n}_afterschool`,`ch${n}_activities`,`ch${n}_schoolstart`,`ch${n}_fees`,`ch${n}_health`,`ch${n}_clothes`,`ch${n}_support`,...dynIds(`dyn-ch${n}-rows`)]});
   if(!childSecs.length) childSecs.push({title:'Children',customRows:[[mk('No children entered.',S.row),mk('',S.row),mk('',S.row),mk('',S.row)]],total:0,skipSubtotal:true});
   const {ws:wsCH,total:childExpTotal}=buildSheet('Children',childSecs);
   XLSX.utils.book_append_sheet(wb,wsCH,'Children');
 
   // ── Pets ────────────────────────────────────────────────────────────
   const {ws:wsPets,total:petsExpTotal}=buildSheet('Pets',[
-    {title:'Regular Expenses', fields:['pt_food','pt_insurance','pt_medication','pt_wash','pt_daycare','pt_other1']},
-    {title:'Annual / Vet',     fields:['pt_vet','pt_flea','pt_vaccinations','pt_dental','pt_registration','pt_other2','pt_other3']},
+    {title:'Regular Expenses', fields:['pt_food','pt_insurance','pt_medication','pt_wash','pt_daycare',...dynIds('dyn-pets1-rows')]},
+    {title:'Annual / Vet',     fields:['pt_vet','pt_flea','pt_vaccinations','pt_dental','pt_registration',...dynIds('dyn-pets2-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsPets,'Pets');
 
   // ── Education ───────────────────────────────────────────────────────
   const {ws:wsEd,total:edExpTotal}=buildSheet('Education',[
-    {title:'Regular Expenses', fields:['ed_stationary','ed_travel','ed_other1','ed_other2','ed_other3','ed_other4']},
-    {title:'Annual Expenses',  fields:['ed_course','ed_books','ed_other5','ed_other6','ed_other7','ed_other8','ed_other9']},
+    {title:'Regular Expenses', fields:['ed_stationary','ed_travel',...dynIds('dyn-ed1-rows')]},
+    {title:'Annual Expenses',  fields:['ed_course','ed_books',...dynIds('dyn-ed2-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsEd,'Education');
 
   // ── Health ──────────────────────────────────────────────────────────
   const {ws:wsHealth,total:healthExpTotal}=buildSheet('Health',[
-    {title:'Regular Expenses', fields:['h_medication','h_insurance','h_gym','h_pt','h_counselling','h_physio','h_other1']},
-    {title:'Annual Expenses',  fields:['h_life_ins','h_medical_fund','h_other2','h_other3','h_other4','h_other5','h_other6']},
+    {title:'Regular Expenses', fields:['h_medication','h_insurance','h_gym','h_pt','h_counselling','h_physio',...dynIds('dyn-h1-rows')]},
+    {title:'Annual Expenses',  fields:['h_life_ins','h_medical_fund',...dynIds('dyn-h2-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsHealth,'Health');
 
   // ── Transport ───────────────────────────────────────────────────────
   const {ws:wsTrans,total:transExpTotal}=buildSheet('Transport',[
-    {title:'Vehicle 1',                    fields:['v1_petrol','v1_tolls','v1_loan','v1_wash','v1_other1','v1_other2','v1_insurance','v1_rego','v1_service','v1_accessories','v1_other3']},
-    {title:'Vehicle 2',                    fields:['v2_petrol','v2_tolls','v2_loan','v2_wash','v2_other1','v2_other2','v2_insurance','v2_rego','v2_service','v2_accessories','v2_other3']},
-    {title:'Public Transport / Rideshare', fields:['tr_uber','tr_public','tr_t_other1','tr_t_other2','tr_t_other3']},
+    {title:'Vehicle 1',                    fields:['v1_petrol','v1_tolls','v1_loan','v1_wash','v1_insurance','v1_rego','v1_service','v1_accessories',...dynIds('dyn-v1-rows')]},
+    {title:'Vehicle 2',                    fields:['v2_petrol','v2_tolls','v2_loan','v2_wash','v2_insurance','v2_rego','v2_service','v2_accessories',...dynIds('dyn-v2-rows')]},
+    {title:'Public Transport / Rideshare', fields:['tr_uber','tr_public',...dynIds('dyn-transit-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsTrans,'Transport');
 
   // ── Lifestyle ───────────────────────────────────────────────────────
   const {ws:wsLS,total:lsExpTotal}=buildSheet('Lifestyle Spending',[
-    {title:'Your Lifestyle',      fields:['ls_entertainment','ls_smoking','ls_gambling','ls_other1','ls_other2','ls_other3','ls_other4','ls_clothing','ls_memberships','ls_other5','ls_other6','ls_other7']},
-    {title:"Partner's Lifestyle", fields:['lsp_entertainment','lsp_smoking','lsp_gambling','lsp_other1','lsp_other2','lsp_other3','lsp_other4','lsp_clothing','lsp_memberships','lsp_other5','lsp_other6','lsp_other7']},
+    {title:'Your Lifestyle',      fields:['ls_entertainment','ls_smoking','ls_gambling','ls_clothing','ls_memberships',...dynIds('dyn-ls-you-rows')]},
+    {title:"Partner's Lifestyle", fields:['lsp_entertainment','lsp_smoking','lsp_gambling','lsp_clothing','lsp_memberships',...dynIds('dyn-ls-partner-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsLS,'Lifestyle Spending');
 
@@ -959,6 +1037,277 @@ function exportExcel(){
 
   XLSX.writeFile(wb,`BudgetCalculator_${client.replace(/\s+/g,'_')}_${today.replace(/\//g,'-')}.xlsx`);
 }
+
+// Save / Load / New session
+function getAllFieldIds(){
+  const ids = [];
+  document.querySelectorAll('.irow input[type=text]').forEach(el=>{ if(el.id) ids.push(el.id); });
+  return ids;
+}
+
+function saveSession(){
+  const dynContainers = {};
+  document.querySelectorAll('[id^="dyn-"]').forEach(container => {
+    const rows = Array.from(container.querySelectorAll('.irow')).map(row=>({
+      id: row.dataset.dynId,
+      label: row.querySelector('.editable-label')?.textContent||'',
+      freq: row.querySelector('select')?.value||'fortnightly',
+      raw: row.querySelector('input[type=text]')?.dataset.raw||''
+    }));
+    if(rows.length) dynContainers[container.id] = rows;
+  });
+  const data = { version:2, clientName: document.getElementById('clientName').value, homeType, numChildren, dynContainers, fields:{}, freqs:{}, labels:{} };
+  getAllFieldIds().forEach(id=>{
+    const el = document.getElementById(id);
+    data.fields[id] = el ? (el.dataset.raw||'') : '';
+    const fEl = document.getElementById('f_'+id);
+    if(fEl) data.freqs[id] = fEl.value;
+  });
+  document.querySelectorAll('.editable-label').forEach(el=>{
+    if(el.closest('.irow')){
+      const inp = el.closest('.irow').querySelector('input');
+      if(inp && inp.id) data.labels[inp.id] = el.textContent;
+    }
+  });
+  const name = (data.clientName||'Client').replace(/\s+/g,'_');
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Budget_${name}.json`;
+  a.click();
+}
+
+function loadSession(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try{
+      const data = JSON.parse(evt.target.result);
+      if(data.clientName) document.getElementById('clientName').value = data.clientName;
+      if(data.homeType) setHomeType(data.homeType);
+      if(typeof data.numChildren === 'number') setChildren(data.numChildren);
+      document.querySelectorAll('[id^="dyn-"]').forEach(c=>c.innerHTML='');
+      dynRowCount = 0;
+      const dynContainersData = data.dynContainers || (data.dynDebts ? {'dyn-debts-rows': data.dynDebts} : {});
+      Object.entries(dynContainersData).forEach(([cid, rows])=>{
+        (rows||[]).forEach(r=>addDynRow(cid, r.label||'Other Expenses', r.freq||'fortnightly', r.id, r.raw, r.label));
+      });
+      Object.entries(data.fields||{}).forEach(([id,raw])=>{
+        const el = document.getElementById(id);
+        if(el){ el.dataset.raw=raw; el.value=raw?'$'+parseFloat(raw).toLocaleString('en-AU'):''; }
+      });
+      Object.entries(data.freqs||{}).forEach(([id,val])=>{
+        const el = document.getElementById('f_'+id);
+        if(el) el.value=val;
+      });
+      Object.entries(data.labels||{}).forEach(([id,text])=>{
+        const inp = document.getElementById(id);
+        if(inp){ const lbl = inp.closest('.irow')?.querySelector('.editable-label'); if(lbl) lbl.textContent=text; }
+      });
+      calculate();
+    } catch(err){ alert('Could not load file — please check it is a valid budget JSON.'); }
+    e.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function newSession(){
+  if(!confirm('Start a new client? This will clear all current data.')) return;
+  document.getElementById('clientName').value='';
+  setHomeType('renter');
+  setChildren(0);
+  getAllFieldIds().forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.value='';el.dataset.raw='';}
+    const fEl=document.getElementById('f_'+id);
+    if(fEl) fEl.value = fEl.dataset.default||'fortnightly';
+  });
+  document.querySelectorAll('.editable-label').forEach(el=>{
+    el.textContent = el.dataset.placeholder||'Other Expenses';
+  });
+  document.querySelectorAll('[id^="dyn-"]').forEach(c=>c.innerHTML='');
+  dynRowCount=0;
+  document.getElementById('pretax-gross').value='';
+  document.getElementById('pretax-results').style.display='none';
+  document.getElementById('pretax-actions').style.display='none';
+  calculate();
+  showPanel('income');
+}
+
+// Pre-tax calculator
+let taxRates = null;
+fetch('tax-rates.json').then(r=>r.json()).then(data=>{
+  taxRates = data;
+  document.getElementById('pretax-fy').textContent = `FY ${data.financial_year}`;
+}).catch(()=>{
+  document.getElementById('pretax-fy').textContent = 'Rates unavailable';
+});
+
+function calcPreTax(){
+  const gross = parseFloat(document.getElementById('pretax-gross').value)||0;
+  const resultsEl = document.getElementById('pretax-results');
+  const actionsEl = document.getElementById('pretax-actions');
+  if(!taxRates||gross<=0){resultsEl.style.display='none';actionsEl.style.display='none';return;}
+
+  // Income tax from brackets
+  const r = taxRates;
+  let tax = 0;
+  for(const b of r.brackets){
+    if(gross>b.min){
+      const taxable = b.max ? Math.min(gross,b.max)-b.min : gross-b.min;
+      tax = b.base + taxable*b.rate;
+    }
+  }
+
+  // LITO
+  let lito = r.lito.max_offset;
+  for(const p of r.lito.phase_out){
+    if(gross>p.from){
+      lito -= Math.min(gross,p.to)*p.rate - p.from*p.rate;
+    }
+  }
+  lito = Math.max(0, Math.min(lito, r.lito.max_offset));
+  const taxAfterLito = Math.max(0, tax-lito);
+
+  // Medicare levy with shade-in
+  let medicare = 0;
+  const m = r.medicare;
+  if(gross>m.shade_in_ceiling) medicare = gross*m.rate;
+  else if(gross>m.low_income_threshold) medicare = (gross-m.low_income_threshold)*m.shade_in_rate;
+
+  const totalTax = taxAfterLito+medicare;
+  const net = gross-totalTax;
+
+  document.getElementById('pt-tax').textContent     = fmt(taxAfterLito);
+  document.getElementById('pt-medicare').textContent = fmt(medicare);
+  document.getElementById('pt-lito').textContent    = fmt(lito);
+  document.getElementById('pt-net').textContent     = fmt(net);
+  document.getElementById('pt-net-sub').textContent = `${fmt(net/12)} / month  ·  ${fmt(net/26)} / fortnight`;
+  resultsEl.style.display='grid';
+  actionsEl.style.display='block';
+}
+
+function toggleRatesTable(){
+  const el = document.getElementById('pretax-rates-table');
+  const btn = document.querySelector('.pretax-inspect-btn');
+  const open = el.style.display === 'none';
+  if(open && taxRates) renderRatesTable();
+  el.style.display = open ? 'block' : 'none';
+  btn.textContent = open ? 'Hide tax rates ▴' : 'View tax rates ▾';
+}
+
+function renderRatesTable(){
+  const r = taxRates;
+  const gross = parseFloat(document.getElementById('pretax-gross').value)||0;
+
+  const brackets = r.brackets.map((b,i) => {
+    const min = `$${b.min.toLocaleString()}`;
+    const max = b.max ? `$${b.max.toLocaleString()}` : 'and over';
+    const rate = b.rate === 0 ? 'Nil' : `${(b.rate*100).toFixed(1)}c per $1`;
+    const active = gross > b.min && (b.max === null || gross <= b.max);
+    return `<tr${active?' class="highlight"':''}>
+      <td>${min} – ${max}</td>
+      <td class="rate-val">${rate}</td>
+    </tr>`;
+  }).join('');
+
+  const litoRow = (() => {
+    if(!gross) return '';
+    let lito = r.lito.max_offset;
+    for(const p of r.lito.phase_out){if(gross>p.from)lito-=Math.min(gross,p.to)*p.rate-p.from*p.rate;}
+    lito = Math.max(0,Math.min(lito,r.lito.max_offset));
+    return lito > 0 ? `<p class="rates-note">Low Income Tax Offset (LITO) applied: <strong>${fmt(lito)}</strong></p>` : '';
+  })();
+
+  document.getElementById('pretax-rates-content').innerHTML = `
+    <table class="rates-table">
+      <thead><tr><th>Taxable Income</th><th>Rate</th></tr></thead>
+      <tbody>${brackets}</tbody>
+    </table>
+    ${litoRow}
+    <p class="rates-note">+ Medicare Levy ${(r.medicare.rate*100).toFixed(0)}% · Source: <a href="${r.source}" target="_blank" style="color:#f68b1f">ATO</a> · Last updated ${r.last_updated}</p>
+  `;
+}
+
+function usePreTaxNet(person){
+  const gross = parseFloat(document.getElementById('pretax-gross').value)||0;
+  if(!taxRates||gross<=0) return;
+  const r = taxRates;
+  let tax=0;
+  for(const b of r.brackets){if(gross>b.min){const t=b.max?Math.min(gross,b.max)-b.min:gross-b.min;tax=b.base+t*b.rate;}}
+  let lito=r.lito.max_offset;
+  for(const p of r.lito.phase_out){if(gross>p.from)lito-=Math.min(gross,p.to)*p.rate-p.from*p.rate;}
+  lito=Math.max(0,Math.min(lito,r.lito.max_offset));
+  const m=r.medicare;
+  let medicare=gross>m.shade_in_ceiling?gross*m.rate:gross>m.low_income_threshold?(gross-m.low_income_threshold)*m.shade_in_rate:0;
+  const net=gross-Math.max(0,tax-lito)-medicare;
+  const inp=document.getElementById(person+'_takehome');
+  const sel=document.getElementById('f_'+person+'_takehome');
+  if(inp){const n=Math.round(net);inp.dataset.raw=n;inp.value='$'+n.toLocaleString('en-AU');if(sel)sel.value='annual';calculate();}
+}
+
+// Block LastPass injections
+new MutationObserver(mutations => {
+  mutations.forEach(m => m.addedNodes.forEach(node => {
+    if(node.nodeType===1 && (
+      node.hasAttribute('data-lastpass-icon-root') ||
+      node.hasAttribute('data-lastpass-root') ||
+      (node.style && node.style.zIndex > 9000 && node.querySelector && node.querySelector('[data-lastpass]'))
+    )) node.remove();
+  }));
+}).observe(document.body, {childList:true, subtree:true});
+
+// Dynamic rows (generic)
+let dynRowCount = 0;
+function addDynRow(containerId, defaultLabel, defaultFreq, id, raw, savedLabel){
+  const rowId = id || ('dyn_'+(dynRowCount++));
+  const freq = defaultFreq || 'fortnightly';
+  const displayLabel = savedLabel || defaultLabel || 'Other Expenses';
+  const placeholder = defaultLabel || 'Other Expenses';
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  const div = document.createElement('div');
+  div.className = 'irow';
+  div.dataset.dynId = rowId;
+  div.innerHTML = `
+    <label><span contenteditable="true" spellcheck="false" class="editable-label" data-placeholder="${placeholder}">${displayLabel}</span></label>
+    <input type="text" inputmode="decimal" id="${rowId}" placeholder="0" autocomplete="off" data-lpignore="true" data-form-type="other" oninput="onAmountInput(this)" onfocus="onAmountFocus(this)" onblur="onAmountBlur(this)">
+    <div style="display:flex;align-items:center;gap:4px;min-width:0">
+      ${freqSelect(rowId, freq)}
+      <button class="remove-row-btn" onclick="removeDynRow(this)" title="Remove">×</button>
+    </div>`;
+  container.appendChild(div);
+  if(raw){ const inp=document.getElementById(rowId); if(inp){inp.dataset.raw=raw;inp.value='$'+parseFloat(raw).toLocaleString('en-AU');} }
+  calculate();
+}
+function removeDynRow(btn){
+  btn.closest('.irow').remove();
+  calculate();
+}
+// Alias for debt rows
+function addDebtRow(id, label, freq, raw){ addDynRow('dyn-debts-rows', label||'Debt name', freq||'fortnightly', id, raw, label); }
+
+// Default value buttons
+function setDefault(id, val){
+  const inp = document.getElementById(id);
+  if(inp){ inp.dataset.raw = val; inp.value = '$'+val.toLocaleString('en-AU'); calculate(); }
+}
+
+// Editable labels — single line, Enter to confirm
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.classList.contains('editable-label')) {
+    e.preventDefault();
+    e.target.blur();
+  }
+});
+document.addEventListener('paste', e => {
+  if (e.target.classList.contains('editable-label')) {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain').replace(/\n/g, ' ');
+    document.execCommand('insertText', false, text);
+  }
+});
 
 // Tooltip positioning
 document.addEventListener('mouseover', e => {
