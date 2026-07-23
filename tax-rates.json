@@ -1,13 +1,13 @@
 {
-  "financial_year": "2024-25",
-  "last_updated": "2024-07-01",
+  "financial_year": "2025-26",
+  "last_updated": "2026-07-23",
   "source": "https://www.ato.gov.au/rates/individual-income-tax-rates/",
   "brackets": [
-    { "min": 0,      "max": 18200,  "base": 0,     "rate": 0.0   },
-    { "min": 18200,  "max": 45000,  "base": 0,     "rate": 0.19  },
-    { "min": 45000,  "max": 120000, "base": 5092,  "rate": 0.325 },
-    { "min": 120000, "max": 180000, "base": 29467, "rate": 0.37  },
-    { "min": 180000, "max": null,   "base": 51667, "rate": 0.45  }
+    { "min": 0,      "max": 18200,  "base": 0,     "rate": 0.0  },
+    { "min": 18200,  "max": 45000,  "base": 0,     "rate": 0.19 },
+    { "min": 45000,  "max": 135000, "base": 5092,  "rate": 0.30 },
+    { "min": 135000, "max": 190000, "base": 32092, "rate": 0.37 },
+    { "min": 190000, "max": null,   "base": 52442, "rate": 0.45 }
   ],
   "lito": {
     "max_offset": 700,

@@ -45,8 +45,27 @@ def parse_rate(text):
     return 0.0
 
 
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-AU,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+}
+
+
 def scrape_brackets():
-    resp = requests.get(ATO_URL, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+    session = requests.Session()
+    session.headers.update(HEADERS)
+    # Prime the session with the ATO homepage first to get cookies
+    try:
+        session.get("https://www.ato.gov.au/", timeout=15)
+    except Exception:
+        pass
+    resp = session.get(ATO_URL, timeout=15)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
 
