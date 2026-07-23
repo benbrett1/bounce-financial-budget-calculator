@@ -568,6 +568,9 @@ function buildApp(){
       <div class="card-body">
         ${buildInputRow({id:'lsj_holidays',label:'Holidays / Travel',freq:'annual',tip:'The average annual spend on holidays is $8,000 – $20,000 per household.'})}
         ${buildInputRow({id:'lsj_gifts',label:'Gifts',freq:'annual',tip:'The average annual spend on gifts is $1,000 – $4,000 per household.'})}
+        ${buildInputRow({id:'lsj_charity',label:'Charity / Donations',freq:'annual'})}
+        ${buildInputRow({id:'lsj_electronics',label:'Electronics',freq:'annual',default:2000})}
+        ${buildInputRow({id:'lsj_accounting',label:'Accounting Fees',freq:'annual'})}
         <div id="dyn-ls-joint-rows"></div>
         <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-ls-joint-rows','Other Expenses','annual')">+ Add expense</button></div>
       </div>
@@ -790,7 +793,7 @@ function calculate(){
   // Lifestyle
   const lsYouTotal = calcGroup('grp_ls_you',['ls_entertainment','ls_smoking','ls_gambling','ls_clothing','ls_memberships',...dynIds('dyn-ls-you-rows')]);
   const lsPartnerTotal = calcGroup('grp_ls_partner',['lsp_entertainment','lsp_smoking','lsp_gambling','lsp_clothing','lsp_memberships',...dynIds('dyn-ls-partner-rows')]);
-  const lsJointTotal = calcGroup('grp_ls_joint',['lsj_holidays','lsj_gifts',...dynIds('dyn-ls-joint-rows')]);
+  const lsJointTotal = calcGroup('grp_ls_joint',['lsj_holidays','lsj_gifts','lsj_charity','lsj_electronics','lsj_accounting',...dynIds('dyn-ls-joint-rows')]);
   const lifestyleTotal = lsYouTotal + lsPartnerTotal + lsJointTotal;
 
   const totalExpenses = homeTotal + debtsTotal + ipTotal + scTotal + childrenTotal + petsTotal + edTotal + healthTotal + transportTotal + lifestyleTotal;
@@ -1026,7 +1029,7 @@ function exportExcel(){
   const {ws:wsLS,total:lsExpTotal}=buildSheet('Lifestyle Spending',[
     {title:'Your Lifestyle',      fields:['ls_entertainment','ls_smoking','ls_gambling','ls_clothing','ls_memberships',...dynIds('dyn-ls-you-rows')]},
     {title:"Partner's Lifestyle", fields:['lsp_entertainment','lsp_smoking','lsp_gambling','lsp_clothing','lsp_memberships',...dynIds('dyn-ls-partner-rows')]},
-    {title:'Joint Lifestyle',     fields:['lsj_holidays','lsj_gifts',...dynIds('dyn-ls-joint-rows')]},
+    {title:'Joint Lifestyle',     fields:['lsj_holidays','lsj_gifts','lsj_charity','lsj_electronics','lsj_accounting',...dynIds('dyn-ls-joint-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsLS,'Lifestyle Spending');
 
