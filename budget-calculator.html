@@ -449,6 +449,22 @@ function buildApp(){
       </div>
       <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_bills">$0</span><span></span></div>
     </div>
+    <div class="card">
+      <div class="card-head"><h3>General Household Expenses</h3><span class="st" id="st_grp_home_gen">$0 / yr</span></div>
+      <div class="card-body">
+        ${buildInputRow({id:'hm_groceries',label:'Groceries',freq:'fortnightly'})}
+        ${buildInputRow({id:'hm_telephone',label:'Telephone',freq:'fortnightly'})}
+        ${buildInputRow({id:'hm_internet',label:'Internet',freq:'fortnightly'})}
+        ${buildInputRow({id:'hm_streaming',label:'Streaming Services',freq:'fortnightly'})}
+        ${buildInputRow({id:'hm_cleaner',label:'Cleaner',freq:'fortnightly'})}
+        ${buildInputRow({id:'hm_newspaper',label:'Newspaper Subscriptions',freq:'fortnightly'})}
+        ${buildInputRow({id:'hm_appsubs',label:'App / Computer Subscriptions',freq:'fortnightly'})}
+        ${buildInputRow({id:'hm_mealkits',label:'Subscription Meal Kits',freq:'fortnightly'})}
+        <div id="dyn-home-gen-rows"></div>
+        <div class="add-row-wrap"><button class="add-row-btn" onclick="addDynRow('dyn-home-gen-rows','Other Expenses','fortnightly')">+ Add expense</button></div>
+      </div>
+      <div class="total-row"><span>Annual Total</span><span class="tv" id="tv_grp_home_gen">$0</span><span></span></div>
+    </div>
     ${buildNavBtns('income','debts',2)}
   </div>`;
 
@@ -587,10 +603,16 @@ function buildApp(){
       <h3>Annual Expense Breakdown</h3>
       <div id="chart-rows"></div>
     </div>
-    <button class="export-btn" onclick="exportExcel()">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export to Excel
-    </button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="export-btn" onclick="exportExcel()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export to Excel
+      </button>
+      <button class="export-btn" id="copyTableBtn" onclick="copyTable()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Export Table for Word
+      </button>
+    </div>
     <div class="nav-btns"><button class="nbtn" onclick="showPanel('lifestyle')">← Back to Lifestyle</button><span></span></div>
   </div>`;
 
@@ -739,7 +761,8 @@ function calculate(){
   const renterTotal = calcGroup('grp_renter',['hm_rent',...dynIds('dyn-home-renter-rows')]);
   const ownerTotal = calcGroup('grp_owner',['hm_mortgage',...dynIds('dyn-home-owner-rows')]);
   const billsTotal = calcGroup('grp_bills',['hm_gas','hm_elec','hm_water','hm_contents_ins','hm_maintenance','hm_rates','hm_body_corp','hm_pool','hm_garden','hm_improvement',...dynIds('dyn-home-bills-rows')]);
-  const homeTotal = (homeType==='renter'?renterTotal:ownerTotal) + billsTotal;
+  const homeGenTotal = calcGroup('grp_home_gen',['hm_groceries','hm_telephone','hm_internet','hm_streaming','hm_cleaner','hm_newspaper','hm_appsubs','hm_mealkits',...dynIds('dyn-home-gen-rows')]);
+  const homeTotal = (homeType==='renter'?renterTotal:ownerTotal) + billsTotal + homeGenTotal;
 
   // Debts
   const debtsTotal = calcGroup('grp_debts',['d_cc1','d_cc2','d_pl1','d_pl2','d_bnpl',...dynIds('dyn-debts-rows')]);
@@ -835,46 +858,245 @@ function updateResults(){
   ].filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
 
   const maxVal = cats.length?cats[0].val:1;
+  const totalCats = cats.reduce((s,c)=>s+c.val,0);
   document.getElementById('chart-rows').innerHTML = cats.map(c=>{
-    const pct = Math.round((c.val/maxVal)*100);
+    const barPct = Math.round((c.val/maxVal)*100);
+    const sharePct = totalCats>0 ? (c.val/totalCats*100).toFixed(1) : '0.0';
     return `<div class="brow">
       <span class="bl">${c.label}</span>
-      <div class="bw"><div class="bb" style="width:${pct}%;background:${c.color}"></div></div>
-      <span class="bv">${fmt(c.val)}</span>
+      <div class="bw"><div class="bb" style="width:${barPct}%;background:${c.color}"></div></div>
+      <span class="bv">${fmt(c.val)} <span style="opacity:0.55;font-size:0.78em">${sharePct}%</span></span>
     </div>`;
   }).join('') || '<p style="color:#94a3b8;font-size:0.8rem">No expenses entered yet.</p>';
 }
 
 function updateClientName(){}
 
+function copyTable(){
+  calculate();
+  const c = window._calc || {};
+
+  const fC = n => '$' + Math.round(Math.abs(n)).toLocaleString('en-AU');
+
+  function getLabel(id){
+    const el = document.getElementById(id);
+    if(!el) return id;
+    const labelEl = el.closest('.irow')?.querySelector('label');
+    if(!labelEl) return id;
+    const editable = labelEl.querySelector('.editable-label');
+    if(editable) return editable.textContent.trim();
+    const clone = labelEl.cloneNode(true);
+    clone.querySelectorAll('.tip,.def-icon').forEach(n=>n.remove());
+    return clone.textContent.trim();
+  }
+
+  const OG = '#FCE4D6', OGB = '#F4B183', DARK = '#833C00';
+  const base = 'font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.0;mso-line-height-rule:exactly;';
+  const p = '1px 4px', b = `1px solid ${OGB}`, bL = '1px solid #e5e7eb';
+  const S = {
+    tbl:  'border-collapse:collapse;width:100%;font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.0',
+    hdr:  `${base}background:${DARK};color:#fff;padding:${p};font-weight:bold;border:${b}`,
+    hdrR: `${base}background:${DARK};color:#fff;padding:${p};font-weight:bold;text-align:right;border:${b}`,
+    sec:  `${base}background:${OGB};color:${DARK};padding:${p};font-weight:bold;border:${b}`,
+    sub:  `${base}background:${OG};color:#111827;padding:${p};font-weight:bold;border:${b};font-style:italic`,
+    row:  `${base}padding:${p};border:${bL}`,
+    rowR: `${base}padding:${p};border:${bL};text-align:right`,
+    rowA: `${base}padding:${p};border:${bL};background:#fdf7f4`,
+    rowAR:`${base}padding:${p};border:${bL};text-align:right;background:#fdf7f4`,
+    tot:  `${base}background:${OG};padding:${p};font-weight:bold;border:${b}`,
+    totR: `${base}background:${OG};padding:${p};font-weight:bold;text-align:right;border:${b}`,
+    grd:  `${base}background:${DARK};color:#fff;padding:${p};font-weight:bold;border:${b}`,
+    grdR: `${base}background:${DARK};color:#fff;padding:${p};font-weight:bold;text-align:right;border:${b}`,
+  };
+
+  const rows = [];
+  let ri = 0, pending = [], sectionHasData = false;
+  const F = 'font-family:Calibri,Arial,sans-serif;font-size:11pt';
+  const sp = (t,extra='') => `<span style="${F};${extra}">${t}</span>`;
+
+  function secHead(t){ pending = [`<tr><td colspan="4" style="${S.sec}">${sp(t,'font-weight:bold;color:#833C00')}</td></tr>`]; ri=0; sectionHasData=false; }
+  function subHead(t){ pending.push(`<tr><td colspan="4" style="${S.sub}">${sp(t,'font-weight:bold;font-style:italic')}</td></tr>`); }
+  function flushPending(){ if(pending.length){ rows.push(...pending); pending=[]; } }
+  function addRow(label, a){
+    if(!a) return;
+    flushPending();
+    sectionHasData = true;
+    const fn=a/26, mo=a/12;
+    const alt = ri++%2===1;
+    rows.push(`<tr>
+      <td style="${alt?S.rowA:S.row}">${sp(label)}</td>
+      <td style="${alt?S.rowAR:S.rowR}">${sp(fC(fn))}</td>
+      <td style="${alt?S.rowAR:S.rowR}">${sp(fC(mo))}</td>
+      <td style="${alt?S.rowAR:S.rowR}">${sp(fC(a))}</td>
+    </tr>`);
+  }
+  function addTotal(label, a){
+    if(!sectionHasData) return;
+    const fn=a/26, mo=a/12;
+    rows.push(`<tr>
+      <td style="${S.tot}">${sp('Total — '+label,'font-weight:bold')}</td>
+      <td style="${S.totR}">${sp(fC(fn),'font-weight:bold')}</td>
+      <td style="${S.totR}">${sp(fC(mo),'font-weight:bold')}</td>
+      <td style="${S.totR}">${sp(fC(a),'font-weight:bold')}</td>
+    </tr>`);
+    ri=0; pending=[]; sectionHasData=false;
+  }
+  function addFields(ids){ ids.forEach(id=>addRow(getLabel(id), ann(id))); }
+
+  // HOME
+  secHead('HOME EXPENSES');
+  if(homeType==='renter') addFields(['hm_rent',...dynIds('dyn-home-renter-rows')]);
+  else addFields(['hm_mortgage',...dynIds('dyn-home-owner-rows')]);
+  addFields(['hm_gas','hm_elec','hm_water','hm_contents_ins','hm_maintenance','hm_rates','hm_body_corp','hm_pool','hm_garden','hm_improvement',...dynIds('dyn-home-bills-rows')]);
+  addFields(['hm_groceries','hm_telephone','hm_internet','hm_streaming','hm_cleaner','hm_newspaper','hm_appsubs','hm_mealkits',...dynIds('dyn-home-gen-rows')]);
+  addTotal('Home Expenses', c.homeTotal||0);
+
+  // DEBTS
+  secHead('DEBTS');
+  addFields(['d_cc1','d_cc2','d_pl1','d_pl2','d_bnpl',...dynIds('dyn-debts-rows')]);
+  addTotal('Debts', c.debtsTotal||0);
+
+  // INVESTMENT PROPERTY
+  if(numProperties>0){
+    secHead('INVESTMENT PROPERTY');
+    for(let n=1;n<=numProperties;n++){
+      addFields([`ip${n}_rent`,`ip${n}_mgmt`,`ip${n}_mortgage`,`ip${n}_body`,`ip${n}_maint`,`ip${n}_water`,`ip${n}_rates`,`ip${n}_pool`,`ip${n}_garden`,`ip${n}_insurance`,...dynIds(`dyn-ip${n}-rows`)]);
+    }
+    addTotal('Investment Property', c.ipTotal||0);
+  }
+
+  // SELF CARE
+  secHead('SELF CARE');
+  addFields(['sc_mani','sc_facial','sc_massage','sc_lashes','sc_makeup',...dynIds('dyn-sc1-rows')]);
+  addFields(['sc_haircuts','sc_botox','sc_laser','sc_cosmetic',...dynIds('dyn-sc2-rows')]);
+  addTotal('Self Care', c.scTotal||0);
+
+  // CHILDREN
+  if(numChildren>0){
+    secHead('CHILDREN');
+    for(let n=1;n<=numChildren;n++){
+      subHead(`Child ${n}`);
+      addFields([`ch${n}_childcare`,`ch${n}_sport`,`ch${n}_afterschool`,`ch${n}_activities`,`ch${n}_schoolstart`,`ch${n}_fees`,`ch${n}_health`,`ch${n}_clothes`,`ch${n}_support`,...dynIds(`dyn-ch${n}-rows`)]);
+    }
+    addTotal('Children', c.childrenTotal||0);
+  }
+
+  // PETS
+  secHead('PETS');
+  addFields(['pt_food','pt_insurance','pt_medication','pt_wash','pt_daycare',...dynIds('dyn-pets1-rows')]);
+  addFields(['pt_vet','pt_flea','pt_vaccinations','pt_dental','pt_registration',...dynIds('dyn-pets2-rows')]);
+  addTotal('Pets', c.petsTotal||0);
+
+  // EDUCATION
+  secHead('EDUCATION');
+  addFields(['ed_stationary','ed_travel',...dynIds('dyn-ed1-rows'),'ed_course','ed_books',...dynIds('dyn-ed2-rows')]);
+  addTotal('Education', c.edTotal||0);
+
+  // HEALTH
+  secHead('HEALTH');
+  addFields(['h_medication','h_insurance','h_gym','h_pt','h_counselling','h_physio',...dynIds('dyn-h1-rows'),'h_life_ins','h_medical_fund',...dynIds('dyn-h2-rows')]);
+  addTotal('Health', c.healthTotal||0);
+
+  // TRANSPORT
+  secHead('TRANSPORT');
+  for(let n=1;n<=numVehicles;n++){
+    subHead(`Vehicle ${n}`);
+    addFields([`v${n}_petrol`,`v${n}_tolls`,`v${n}_loan`,`v${n}_wash`,`v${n}_insurance`,`v${n}_rego`,`v${n}_service`,`v${n}_accessories`,...dynIds(`dyn-v${n}-rows`)]);
+  }
+  addFields(['tr_uber','tr_public',...dynIds('dyn-transit-rows')]);
+  addTotal('Transport', c.transportTotal||0);
+
+  // LIFESTYLE
+  secHead('LIFESTYLE SPENDING');
+  subHead('Your Lifestyle');
+  addFields(['ls_entertainment','ls_smoking','ls_gambling','ls_clothing','ls_memberships',...dynIds('dyn-ls-you-rows')]);
+  subHead("Partner's Lifestyle");
+  addFields(['lsp_entertainment','lsp_smoking','lsp_gambling','lsp_clothing','lsp_memberships',...dynIds('dyn-ls-partner-rows')]);
+  subHead('Joint Lifestyle');
+  addFields(['lsj_holidays','lsj_gifts','lsj_charity','lsj_electronics','lsj_accounting',...dynIds('dyn-ls-joint-rows')]);
+  addTotal('Lifestyle', c.lifestyleTotal||0);
+
+  // TOTAL EXPENSES
+  rows.push(`<tr><td style="${S.grd}">${sp('TOTAL EXPENSES','font-weight:bold;color:#fff')}</td><td style="${S.grdR}">${sp(fC((c.totalExpenses||0)/26),'font-weight:bold;color:#fff')}</td><td style="${S.grdR}">${sp(fC((c.totalExpenses||0)/12),'font-weight:bold;color:#fff')}</td><td style="${S.grdR}">${sp(fC(c.totalExpenses||0),'font-weight:bold;color:#fff')}</td></tr>`);
+
+  const table = `<table style="border-collapse:collapse;width:100%"><thead><tr>
+    <th style="${S.hdr}">Category</th>
+    <th style="${S.hdrR}">Fortnightly</th>
+    <th style="${S.hdrR}">Monthly</th>
+    <th style="${S.hdrR}">Annual</th>
+  </tr></thead><tbody>${rows.join('')}</tbody></table>`;
+
+  const name = (document.getElementById('clientName').value||'Client').replace(/\s+/g,'_');
+  const doc = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="ProgId" content="Word.Document">
+<style>
+@page WordSection1 { size:21cm 29.7cm; margin:1.5cm; }
+div.WordSection1 { page:WordSection1; }
+body, p, td, th { font-family:Calibri,sans-serif; font-size:11.0pt; margin:0; }
+table { border-collapse:collapse; width:100%; }
+td, th { padding:1px 4px; mso-font-charset:0; }
+</style>
+</head>
+<body><div class="WordSection1">${table}</div></body></html>`;
+
+  const blob = new Blob([doc], {type:'application/msword'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Budget_${name}.doc`;
+  a.click();
+}
+
 function exportExcel(){
+  try {
+  if(typeof XLSX === 'undefined'){ alert('Excel library not loaded. Please check your internet connection and refresh the page.'); return; }
+  calculate();
   const wb = XLSX.utils.book_new();
   const client = document.getElementById('clientName').value || 'Client';
   const today  = new Date().toLocaleDateString('en-AU');
 
-  // ── Styles ──────────────────────────────────────────────────────────
+  // ── App-matched colour palette ───────────────────────────────────────
+  // Dark header: #1a1a1a  Gold: #ffca38  Orange: #f68b1f
+  // Light orange bg: #fff8ee  Card head: #fafafa  Green: #059669  Red: #dc2626
   const fill = rgb => ({patternType:'solid', fgColor:{rgb}});
+  const bord = (style,rgb) => ({style,color:{rgb}});
+  const topBord = rgb => ({top:bord('medium',rgb)});
   const S = {
-    titleCell: {font:{bold:true,sz:13,color:{rgb:'FFFFFF'}}, fill:fill('1E3A5F'), alignment:{horizontal:'left',vertical:'center'}},
-    metaCell:  {font:{sz:9,color:{rgb:'94A3B8'}}, fill:fill('1E3A5F')},
-    colHdr:    {font:{bold:true,sz:9,color:{rgb:'374151'}}, fill:fill('F1F5F9'), border:{bottom:{style:'medium',color:{rgb:'CBD5E1'}}}},
-    secHdr:    {font:{bold:true,sz:9,color:{rgb:'1E3A5F'}}, fill:fill('DBEAFE')},
-    row:       {font:{sz:9,color:{rgb:'374151'}}},
-    rowAlt:    {font:{sz:9,color:{rgb:'374151'}}, fill:fill('F8FAFC')},
-    num:       {font:{sz:9,color:{rgb:'374151'}}, numFmt:'"$"#,##0.00'},
-    numAlt:    {font:{sz:9,color:{rgb:'374151'}}, fill:fill('F8FAFC'), numFmt:'"$"#,##0.00'},
-    subTotLbl: {font:{bold:true,sz:9,color:{rgb:'1E40AF'}}, fill:fill('EFF6FF')},
-    subTotNum: {font:{bold:true,sz:9,color:{rgb:'1E40AF'}}, fill:fill('EFF6FF'), numFmt:'"$"#,##0.00'},
-    grandLbl:  {font:{bold:true,sz:11,color:{rgb:'FFFFFF'}}, fill:fill('1E3A5F')},
-    grandNum:  {font:{bold:true,sz:11,color:{rgb:'FFFFFF'}}, fill:fill('1E3A5F'), numFmt:'"$"#,##0.00'},
-    posLbl:    {font:{bold:true,sz:10,color:{rgb:'065F46'}}, fill:fill('D1FAE5')},
-    posNum:    {font:{bold:true,sz:10,color:{rgb:'065F46'}}, fill:fill('D1FAE5'), numFmt:'"$"#,##0.00'},
-    posPct:    {font:{bold:true,sz:10,color:{rgb:'065F46'}}, fill:fill('D1FAE5'), numFmt:'0.0%'},
-    negLbl:    {font:{bold:true,sz:10,color:{rgb:'991B1B'}}, fill:fill('FEE2E2')},
-    negNum:    {font:{bold:true,sz:10,color:{rgb:'991B1B'}}, fill:fill('FEE2E2'), numFmt:'"$"#,##0.00'},
-    incLbl:    {font:{bold:true,sz:9,color:{rgb:'065F46'}}, fill:fill('ECFDF5')},
-    expLbl:    {font:{bold:true,sz:9,color:{rgb:'991B1B'}}, fill:fill('FFF1F2')},
-    blank:     {font:{sz:9}},
+    // Title row — orange bg, white text
+    title:    {font:{bold:true,sz:12,color:{rgb:'FFFFFF'},name:'Calibri'}, fill:fill('F68B1F'), alignment:{horizontal:'left',vertical:'center'}},
+    titleR:   {font:{bold:true,sz:12,color:{rgb:'FFFFFF'},name:'Calibri'}, fill:fill('F68B1F'), alignment:{horizontal:'right',vertical:'center'}},
+    // Meta row — light orange bg, subtle text
+    meta:     {font:{sz:9,color:{rgb:'833C00'},name:'Calibri'}, fill:fill('FFF8EE')},
+    metaR:    {font:{sz:9,color:{rgb:'833C00'},name:'Calibri'}, fill:fill('FFF8EE'), alignment:{horizontal:'right'}},
+    // Column headers — light gray bg (mirrors .card-head)
+    colHdr:   {font:{bold:true,sz:9,color:{rgb:'1A1A1A'},name:'Calibri'}, fill:fill('FAFAFA'), border:{bottom:bord('medium','F68B1F')}},
+    colHdrR:  {font:{bold:true,sz:9,color:{rgb:'1A1A1A'},name:'Calibri'}, fill:fill('FAFAFA'), border:{bottom:bord('medium','F68B1F')}, alignment:{horizontal:'right'}},
+    // Section header — light orange bg, orange bold text (mirrors .card-head h3 + .tab.active)
+    sec:      {font:{bold:true,sz:9,color:{rgb:'F68B1F'},name:'Calibri'}, fill:fill('FFF8EE'), border:{top:bord('thin','FFCA38'),bottom:bord('thin','FFE0A0')}},
+    // Data rows — white / fafafa alternating
+    row:      {font:{sz:9,color:{rgb:'374151'},name:'Calibri'}},
+    rowAlt:   {font:{sz:9,color:{rgb:'374151'},name:'Calibri'}, fill:fill('FAFAFA')},
+    num:      {font:{sz:9,color:{rgb:'374151'},name:'Calibri'}, numFmt:'"$"#,##0.00', alignment:{horizontal:'right'}},
+    numAlt:   {font:{sz:9,color:{rgb:'374151'},name:'Calibri'}, fill:fill('FAFAFA'), numFmt:'"$"#,##0.00', alignment:{horizontal:'right'}},
+    freq:     {font:{sz:9,color:{rgb:'999999'},name:'Calibri'}, alignment:{horizontal:'center'}},
+    freqAlt:  {font:{sz:9,color:{rgb:'999999'},name:'Calibri'}, fill:fill('FAFAFA'), alignment:{horizontal:'center'}},
+    // Subtotal — light orange bg, orange bold text (mirrors .total-row)
+    subLbl:   {font:{bold:true,sz:9,color:{rgb:'F68B1F'},name:'Calibri'}, fill:fill('FFF8EE'), border:{top:bord('medium','FFCA38')}},
+    subNum:   {font:{bold:true,sz:9,color:{rgb:'F68B1F'},name:'Calibri'}, fill:fill('FFF8EE'), border:{top:bord('medium','FFCA38')}, numFmt:'"$"#,##0.00', alignment:{horizontal:'right'}},
+    // Grand total — strong orange bg, white text
+    grandLbl: {font:{bold:true,sz:10,color:{rgb:'FFFFFF'},name:'Calibri'}, fill:fill('F68B1F'), border:{top:bord('medium','E07A10')}},
+    grandNum: {font:{bold:true,sz:10,color:{rgb:'FFFFFF'},name:'Calibri'}, fill:fill('F68B1F'), border:{top:bord('medium','E07A10')}, numFmt:'"$"#,##0.00', alignment:{horizontal:'right'}},
+    // Income / expense sub-labels in IP section
+    incLbl:   {font:{bold:true,sz:9,color:{rgb:'059669'},name:'Calibri'}, fill:fill('ECFDF5')},
+    expLbl:   {font:{bold:true,sz:9,color:{rgb:'DC2626'},name:'Calibri'}, fill:fill('FFF1F2')},
+    // Positive / negative results (mirrors .rc.pos/.rc.neg)
+    posLbl:   {font:{bold:true,sz:9,color:{rgb:'059669'},name:'Calibri'}, fill:fill('ECFDF5')},
+    posNum:   {font:{bold:true,sz:9,color:{rgb:'059669'},name:'Calibri'}, fill:fill('ECFDF5'), numFmt:'"$"#,##0.00', alignment:{horizontal:'right'}},
+    posPct:   {font:{bold:true,sz:9,color:{rgb:'059669'},name:'Calibri'}, fill:fill('ECFDF5'), numFmt:'0.0%', alignment:{horizontal:'right'}},
+    negLbl:   {font:{bold:true,sz:9,color:{rgb:'DC2626'},name:'Calibri'}, fill:fill('FEE2E2')},
+    negNum:   {font:{bold:true,sz:9,color:{rgb:'DC2626'},name:'Calibri'}, fill:fill('FEE2E2'), numFmt:'"$"#,##0.00', alignment:{horizontal:'right'}},
+    blank:    {font:{sz:9,name:'Calibri'}},
   };
 
   function mk(v, s) {
@@ -882,68 +1104,92 @@ function exportExcel(){
     return {v, s:s||S.blank, t:typeof v==='number'?'n':'s'};
   }
   function capFreq(f){ return f?f.charAt(0).toUpperCase()+f.slice(1):''; }
-  function getF(id){
-    const el   = document.getElementById(id);
-    const val  = parseFloat(el?.value)||0;
-    const freq = document.getElementById('f_'+id)?.value||'fortnightly';
-    let lbl = document.querySelector(`label[for="${id}"]`)?.textContent?.trim();
-    if(!lbl) lbl = el?.closest('.irow')?.querySelector('label')?.textContent?.trim();
-    if(!lbl) lbl = id;
-    return {lbl,val,freq,ann:val*MULT[freq]};
+
+  // Get label, stripping tooltip/default-button text from the DOM node
+  function getLabel(id){
+    const el = document.getElementById(id);
+    const labelEl = document.querySelector(`label[for="${id}"]`) || el?.closest('.irow')?.querySelector('label');
+    if(!labelEl) return id;
+    const clone = labelEl.cloneNode(true);
+    clone.querySelectorAll('.tip,.def-icon').forEach(n=>n.remove());
+    return clone.textContent.trim() || id;
   }
 
-  // ── Sheet builder ───────────────────────────────────────────────────
+  function getF(id){
+    const el  = document.getElementById(id);
+    const raw = parseFloat(el?.dataset?.raw) || parseFloat(el?.value) || 0;
+    const freq = document.getElementById('f_'+id)?.value || 'fortnightly';
+    return {lbl: getLabel(id), val: raw, freq, ann: raw * MULT[freq]};
+  }
+
+  // ── Single-sheet builder ─────────────────────────────────────────────
   function buildSheet(title, sections){
     const rows=[], merges=[];
     const addRow = (...cells) => rows.push(cells);
     const addBlank = () => addRow(mk('',S.blank),mk('',S.blank),mk('',S.blank),mk('',S.blank));
-    const spanRow  = r => merges.push({s:{r,c:0},e:{r,c:3}});
+    const span = r => merges.push({s:{r,c:0},e:{r,c:3}});
 
-    addRow(mk(title,S.titleCell),mk('',S.titleCell),mk('',S.titleCell),mk('',S.titleCell)); spanRow(0);
-    addRow(mk('Client: '+client,S.metaCell),mk('',S.metaCell),mk('Date: '+today,S.metaCell),mk('',S.metaCell));
-    merges.push({s:{r:1,c:0},e:{r:1,c:1}}); merges.push({s:{r:1,c:2},e:{r:1,c:3}});
+    // Header block
+    addRow(mk(title,S.title),mk('',S.title),mk('',S.title),mk('',S.titleR)); span(0);
+    addRow(mk(client,S.meta),mk('',S.meta),mk('',S.meta),mk(today,S.metaR));
+    merges.push({s:{r:1,c:0},e:{r:1,c:2}});
     addBlank();
-    addRow(mk('Category',S.colHdr),mk('Amount Entered',S.colHdr),mk('Frequency',S.colHdr),mk('Annual Total',S.colHdr));
+    addRow(mk('Category',S.colHdr),mk('Amount',S.colHdrR),mk('Frequency',S.colHdr),mk('Annual',S.colHdrR));
 
     let grandTotal=0;
     sections.forEach(sec=>{
-      const secR=rows.length;
-      addRow(mk(sec.title.toUpperCase(),S.secHdr),mk('',S.secHdr),mk('',S.secHdr),mk('',S.secHdr)); spanRow(secR);
-      let secTotal=0;
+      // Buffer section header — only flush it if there's data
+      const secRowIdx = rows.length;
+      addRow(mk('  '+sec.title,S.sec),mk('',S.sec),mk('',S.sec),mk('',S.sec)); span(secRowIdx);
+      let secTotal=0, secHasData=false;
+
       if(sec.fields){
-        sec.fields.forEach((id,i)=>{
-          const f=getF(id), even=i%2===0;
-          addRow(
+        const dataRows=[];
+        sec.fields.forEach(id=>{
+          const f=getF(id);
+          if(f.ann===0) return; // skip $0 rows
+          secHasData=true;
+          const i=dataRows.length, even=i%2===0;
+          dataRows.push([
             mk('    '+f.lbl, even?S.row:S.rowAlt),
-            f.val>0?mk(f.val,even?S.num:S.numAlt):mk('',even?S.row:S.rowAlt),
-            mk(f.val>0?capFreq(f.freq):'',even?S.row:S.rowAlt),
-            f.ann>0?mk(f.ann,even?S.num:S.numAlt):mk('',even?S.row:S.rowAlt)
-          );
+            mk(f.val, even?S.num:S.numAlt),
+            mk(capFreq(f.freq), even?S.freq:S.freqAlt),
+            mk(f.ann, even?S.num:S.numAlt),
+          ]);
           secTotal+=f.ann;
         });
+        if(!secHasData){
+          // Remove the section header row we just added
+          rows.splice(secRowIdx,1);
+          merges.splice(merges.findIndex(m=>m.s.r===secRowIdx),1);
+          return;
+        }
+        dataRows.forEach(r=>rows.push(r));
       } else if(sec.customRows){
         sec.customRows.forEach(r=>rows.push(r));
         secTotal=sec.total||0;
+        secHasData=true;
       }
-      if(!sec.skipSubtotal){
-        addRow(mk(sec.title+' Total',S.subTotLbl),mk('',S.subTotLbl),mk('',S.subTotLbl),mk(secTotal,S.subTotNum));
+
+      if(!sec.skipSubtotal && secHasData){
+        addRow(mk('  '+sec.title+' Total',S.subLbl),mk('',S.subLbl),mk('',S.subLbl),mk(secTotal,S.subNum));
       }
-      addBlank();
       grandTotal+=secTotal;
     });
+
     addRow(mk('TOTAL — '+title.toUpperCase(),S.grandLbl),mk('',S.grandLbl),mk('',S.grandLbl),mk(grandTotal,S.grandNum));
+    span(rows.length-1);
 
     const ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:40},{wch:16},{wch:14},{wch:16}];
-    ws['!rows']=[{hpt:24},{hpt:15}];
+    ws['!cols']=[{wch:38},{wch:14},{wch:14},{wch:14}];
     ws['!merges']=merges;
     return {ws,total:grandTotal};
   }
 
   // ── Income ──────────────────────────────────────────────────────────
   const {ws:wsIncome,total:incTotal}=buildSheet('Income',[
-    {title:"Your Salary",      fields:['y_takehome','y_bonus','y_centrelink','y_investments',...dynIds('dyn-income-you-rows')]},
-    {title:"Partner's Salary", fields:['p_takehome','p_bonus','p_centrelink','p_investments',...dynIds('dyn-income-partner-rows')]},
+    {title:"Your Income",      fields:['y_takehome','y_bonus','y_centrelink','y_investments',...dynIds('dyn-income-you-rows')]},
+    {title:"Partner's Income", fields:['p_takehome','p_bonus','p_centrelink','p_investments',...dynIds('dyn-income-partner-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsIncome,'Income');
 
@@ -953,7 +1199,8 @@ function exportExcel(){
     :{title:'Home Owner Expenses', fields:['hm_mortgage',...dynIds('dyn-home-owner-rows')]};
   const {ws:wsHome,total:homeExpTotal}=buildSheet('Home Expenses',[
     homeSec,
-    {title:'Household Bills',fields:['hm_gas','hm_elec','hm_water','hm_contents_ins','hm_maintenance','hm_rates','hm_body_corp','hm_pool','hm_garden','hm_improvement',...dynIds('dyn-home-bills-rows')]},
+    {title:'Household Bills',             fields:['hm_gas','hm_elec','hm_water','hm_contents_ins','hm_maintenance','hm_rates','hm_body_corp','hm_pool','hm_garden','hm_improvement',...dynIds('dyn-home-bills-rows')]},
+    {title:'General Household Expenses',  fields:['hm_groceries','hm_telephone','hm_internet','hm_streaming','hm_cleaner','hm_newspaper','hm_appsubs','hm_mealkits',...dynIds('dyn-home-gen-rows')]},
   ]);
   XLSX.utils.book_append_sheet(wb,wsHome,'Home Expenses');
 
@@ -970,15 +1217,17 @@ function exportExcel(){
     const incAnn=rentF.ann, expAnn=expIds.reduce((s,id)=>s+getF(id).ann,0), netCost=Math.max(0,expAnn-incAnn);
     const cr=[];
     cr.push([mk('  INCOME',S.incLbl),mk('',S.incLbl),mk('',S.incLbl),mk('',S.incLbl)]);
-    cr.push([mk('    Rental Income',S.row),rentF.val>0?mk(rentF.val,S.num):mk('',S.row),mk(rentF.val>0?capFreq(rentF.freq):'',S.row),rentF.ann>0?mk(rentF.ann,S.num):mk('',S.row)]);
-    cr.push([mk('  Income Total',S.subTotLbl),mk('',S.subTotLbl),mk('',S.subTotLbl),mk(incAnn,S.subTotNum)]);
+    if(rentF.ann>0) cr.push([mk('    Rental Income',S.row),mk(rentF.val,S.num),mk(capFreq(rentF.freq),S.freq),mk(rentF.ann,S.num)]);
+    cr.push([mk('  Income Total',S.subLbl),mk('',S.subLbl),mk('',S.subLbl),mk(incAnn,S.subNum)]);
     cr.push([mk('  EXPENSES',S.expLbl),mk('',S.expLbl),mk('',S.expLbl),mk('',S.expLbl)]);
-    expIds.forEach((id,i)=>{const f=getF(id),even=i%2===0;cr.push([mk('    '+f.lbl,even?S.row:S.rowAlt),f.val>0?mk(f.val,even?S.num:S.numAlt):mk('',even?S.row:S.rowAlt),mk(f.val>0?capFreq(f.freq):'',even?S.row:S.rowAlt),f.ann>0?mk(f.ann,even?S.num:S.numAlt):mk('',even?S.row:S.rowAlt)]);});
-    cr.push([mk('  Expenses Total',S.subTotLbl),mk('',S.subTotLbl),mk('',S.subTotLbl),mk(expAnn,S.subTotNum)]);
-    cr.push([mk('  Net Cost (Expenses − Income)',netCost>0?S.negLbl:S.posLbl),mk('',netCost>0?S.negLbl:S.posLbl),mk('',netCost>0?S.negLbl:S.posLbl),mk(netCost,netCost>0?S.negNum:S.posNum)]);
+    let ei=0;
+    expIds.forEach(id=>{const f=getF(id);if(f.ann===0)return;const even=ei%2===0;ei++;cr.push([mk('    '+f.lbl,even?S.row:S.rowAlt),mk(f.val,even?S.num:S.numAlt),mk(capFreq(f.freq),even?S.freq:S.freqAlt),mk(f.ann,even?S.num:S.numAlt)]);});
+    cr.push([mk('  Expenses Total',S.subLbl),mk('',S.subLbl),mk('',S.subLbl),mk(expAnn,S.subNum)]);
+    const nL=netCost>0?S.negLbl:S.posLbl, nN=netCost>0?S.negNum:S.posNum;
+    cr.push([mk('  Net Cost (Expenses − Income)',nL),mk('',nL),mk('',nL),mk(netCost,nN)]);
     return {title:`Investment Property ${n}`,customRows:cr,total:netCost,skipSubtotal:true};
   }
-  const ipSecs = numProperties>0 ? Array.from({length:numProperties},(_,i)=>buildIPSec(i+1)) : [{title:'Investment Property',customRows:[[mk('No investment properties entered.',S.row),mk('',S.row),mk('',S.row),mk('',S.row)]],total:0,skipSubtotal:true}];
+  const ipSecs=numProperties>0?Array.from({length:numProperties},(_,i)=>buildIPSec(i+1)):[{title:'Investment Property',customRows:[[mk('No investment properties entered.',S.row),mk('',S.blank),mk('',S.blank),mk('',S.blank)]],total:0,skipSubtotal:true}];
   const {ws:wsIP,total:ipExpTotal}=buildSheet('Investment Property',ipSecs);
   XLSX.utils.book_append_sheet(wb,wsIP,'Investment Property');
 
@@ -992,7 +1241,7 @@ function exportExcel(){
   // ── Children ────────────────────────────────────────────────────────
   const childSecs=[];
   for(let n=1;n<=numChildren;n++) childSecs.push({title:`Child ${n}`,fields:[`ch${n}_childcare`,`ch${n}_sport`,`ch${n}_afterschool`,`ch${n}_activities`,`ch${n}_schoolstart`,`ch${n}_fees`,`ch${n}_health`,`ch${n}_clothes`,`ch${n}_support`,...dynIds(`dyn-ch${n}-rows`)]});
-  if(!childSecs.length) childSecs.push({title:'Children',customRows:[[mk('No children entered.',S.row),mk('',S.row),mk('',S.row),mk('',S.row)]],total:0,skipSubtotal:true});
+  if(!childSecs.length) childSecs.push({title:'Children',customRows:[[mk('No children entered.',S.row),mk('',S.blank),mk('',S.blank),mk('',S.blank)]],total:0,skipSubtotal:true});
   const {ws:wsCH,total:childExpTotal}=buildSheet('Children',childSecs);
   XLSX.utils.book_append_sheet(wb,wsCH,'Children');
 
@@ -1018,7 +1267,7 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,wsHealth,'Health');
 
   // ── Transport ───────────────────────────────────────────────────────
-  const vehicleSecs = numVehicles>0 ? Array.from({length:numVehicles},(_,i)=>{ const n=i+1; return {title:`Vehicle ${n}`,fields:[`v${n}_petrol`,`v${n}_tolls`,`v${n}_loan`,`v${n}_wash`,`v${n}_insurance`,`v${n}_rego`,`v${n}_service`,`v${n}_accessories`,...dynIds(`dyn-v${n}-rows`)]}; }) : [{title:'Vehicles',customRows:[[mk('No vehicles entered.',S.row),mk('',S.row),mk('',S.row),mk('',S.row)]],total:0,skipSubtotal:true}];
+  const vehicleSecs=numVehicles>0?Array.from({length:numVehicles},(_,i)=>{const n=i+1;return{title:`Vehicle ${n}`,fields:[`v${n}_petrol`,`v${n}_tolls`,`v${n}_loan`,`v${n}_wash`,`v${n}_insurance`,`v${n}_rego`,`v${n}_service`,`v${n}_accessories`,...dynIds(`dyn-v${n}-rows`)]};}):[];
   const {ws:wsTrans,total:transExpTotal}=buildSheet('Transport',[
     ...vehicleSecs,
     {title:'Public Transport / Rideshare', fields:['tr_uber','tr_public',...dynIds('dyn-transit-rows')]},
@@ -1033,7 +1282,7 @@ function exportExcel(){
   ]);
   XLSX.utils.book_append_sheet(wb,wsLS,'Lifestyle Spending');
 
-  // ── Results ─────────────────────────────────────────────────────────
+  // ── Results summary sheet ───────────────────────────────────────────
   const totExp=homeExpTotal+debtsExpTotal+ipExpTotal+scExpTotal+childExpTotal+petsExpTotal+edExpTotal+healthExpTotal+transExpTotal+lsExpTotal;
   const surplus=incTotal-totExp;
   const savRate=incTotal>0?surplus/incTotal:0;
@@ -1044,46 +1293,47 @@ function exportExcel(){
   const addB=()=>addR(mk('',S.blank),mk('',S.blank),mk('',S.blank),mk('',S.blank));
   const spanR=r=>rMerges.push({s:{r,c:0},e:{r,c:3}});
 
-  addR(mk('Results Summary',S.titleCell),mk('',S.titleCell),mk('',S.titleCell),mk('',S.titleCell)); spanR(0);
-  addR(mk('Client: '+client,S.metaCell),mk('',S.metaCell),mk('Date: '+today,S.metaCell),mk('',S.metaCell));
-  rMerges.push({s:{r:1,c:0},e:{r:1,c:1}}); rMerges.push({s:{r:1,c:2},e:{r:1,c:3}});
+  addR(mk('Results Summary',S.title),mk('',S.title),mk('',S.title),mk(today,S.titleR)); spanR(0);
+  addR(mk(client,S.meta),mk('',S.meta),mk('',S.meta),mk('',S.meta)); spanR(1);
   addB();
-  addR(mk('',S.colHdr),mk('Annual',S.colHdr),mk('Monthly',S.colHdr),mk('Fortnightly',S.colHdr));
-  addB();
+  addR(mk('',S.colHdr),mk('Annual',S.colHdrR),mk('Monthly',S.colHdrR),mk('Fortnightly',S.colHdrR));
 
-  addR(mk('INCOME',S.secHdr),mk('',S.secHdr),mk('',S.secHdr),mk('',S.secHdr)); spanR(rRows.length-1);
-  addR(mk('  Total Annual Income',S.row),mk(incTotal,S.num),mk(incTotal/12,S.num),mk(incTotal/26,S.num));
-  addB();
+  addR(mk('  INCOME',S.sec),mk('',S.sec),mk('',S.sec),mk('',S.sec)); spanR(rRows.length-1);
+  addR(mk('    Total Income',S.row),mk(incTotal,S.num),mk(incTotal/12,S.num),mk(incTotal/26,S.num));
+  addR(mk('  Income Total',S.subLbl),mk(incTotal,S.subNum),mk(incTotal/12,S.subNum),mk(incTotal/26,S.subNum));
 
-  addR(mk('EXPENSES',S.secHdr),mk('',S.secHdr),mk('',S.secHdr),mk('',S.secHdr)); spanR(rRows.length-1);
+  addR(mk('  EXPENSES',S.sec),mk('',S.sec),mk('',S.sec),mk('',S.sec)); spanR(rRows.length-1);
   const expBreakdown=[
     ['Home Expenses',homeExpTotal],['Debts',debtsExpTotal],['Investment Property',ipExpTotal],
     ['Self Care',scExpTotal],['Children',childExpTotal],['Pets',petsExpTotal],
     ['Education',edExpTotal],['Health',healthExpTotal],['Transport',transExpTotal],['Lifestyle Spending',lsExpTotal],
   ];
-  expBreakdown.forEach(([lbl,val],i)=>{
-    const s=i%2===0?S.row:S.rowAlt,sn=i%2===0?S.num:S.numAlt;
-    addR(mk('  '+lbl,s),mk(val,sn),mk(val/12,sn),mk(val/26,sn));
+  let ei=0;
+  expBreakdown.forEach(([lbl,val])=>{
+    if(val===0) return;
+    const even=ei%2===0; ei++;
+    addR(mk('    '+lbl,even?S.row:S.rowAlt),mk(val,even?S.num:S.numAlt),mk(val/12,even?S.num:S.numAlt),mk(val/26,even?S.num:S.numAlt));
   });
-  addR(mk('Total Expenses',S.subTotLbl),mk(totExp,S.subTotNum),mk(totExp/12,S.subTotNum),mk(totExp/26,S.subTotNum));
-  addB();
+  addR(mk('  Expenses Total',S.subLbl),mk(totExp,S.subNum),mk(totExp/12,S.subNum),mk(totExp/26,S.subNum));
 
-  addR(mk('SURPLUS / DEFICIT',S.secHdr),mk('',S.secHdr),mk('',S.secHdr),mk('',S.secHdr)); spanR(rRows.length-1);
+  addR(mk('  SURPLUS / DEFICIT',S.sec),mk('',S.sec),mk('',S.sec),mk('',S.sec)); spanR(rRows.length-1);
   const sL=surplus>=0?S.posLbl:S.negLbl, sN=surplus>=0?S.posNum:S.negNum;
-  addR(mk('  Annual Surplus / Deficit',sL),mk(surplus,sN),mk(surplus/12,sN),mk(surplus/26,sN));
-  addB();
+  addR(mk('    Annual Surplus / Deficit',sL),mk(surplus,sN),mk(surplus/12,sN),mk(surplus/26,sN));
 
-  addR(mk('KEY METRICS',S.secHdr),mk('',S.secHdr),mk('',S.secHdr),mk('',S.secHdr)); spanR(rRows.length-1);
-  addR(mk('  Savings Rate',S.row), mk(savRate,{...S.num,numFmt:'0.0%'}),mk('',S.blank),mk('',S.blank));
-  addR(mk('  Spending Rate',S.row),mk(spdRate,{...S.num,numFmt:'0.0%'}),mk('',S.blank),mk('',S.blank));
+  addR(mk('  KEY METRICS',S.sec),mk('',S.sec),mk('',S.sec),mk('',S.sec)); spanR(rRows.length-1);
+  const srL=savRate>=0?S.posLbl:S.negLbl, srN=savRate>=0?S.posPct:S.negNum;
+  addR(mk('    Savings Rate',srL),mk(savRate,srN),mk('',S.blank),mk('',S.blank));
+  addR(mk('    Spending Rate',S.row),mk(spdRate,{...S.num,numFmt:'0.0%',alignment:{horizontal:'right'}}),mk('',S.blank),mk('',S.blank));
+
+  addR(mk('TOTAL ANNUAL EXPENSES',S.grandLbl),mk(totExp,S.grandNum),mk(totExp/12,S.grandNum),mk(totExp/26,S.grandNum));
 
   const wsR=XLSX.utils.aoa_to_sheet(rRows);
-  wsR['!cols']=[{wch:38},{wch:16},{wch:14},{wch:14}];
-  wsR['!rows']=[{hpt:24},{hpt:15}];
+  wsR['!cols']=[{wch:36},{wch:16},{wch:14},{wch:14}];
   wsR['!merges']=rMerges;
   XLSX.utils.book_append_sheet(wb,wsR,'Results');
 
-  XLSX.writeFile(wb,`BudgetCalculator_${client.replace(/\s+/g,'_')}_${today.replace(/\//g,'-')}.xlsx`);
+  XLSX.writeFile(wb,`BudgetCalculator_${client.replace(/[^a-zA-Z0-9]/g,'_')}_${today.replace(/\//g,'-')}.xlsx`);
+  } catch(e){ alert('Export failed: '+e.message); console.error(e); }
 }
 
 // Save / Load / New session
@@ -1118,11 +1368,19 @@ function saveSession(){
     }
   });
   const name = (data.clientName||'Client').replace(/\s+/g,'_');
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `Budget_${name}.json`;
-  a.click();
+  const json = JSON.stringify(data,null,2);
+  const blob = new Blob([json],{type:'application/json'});
+  if(window.showSaveFilePicker){
+    window.showSaveFilePicker({
+      suggestedName: `Budget_${name}.json`,
+      types:[{description:'JSON File',accept:{'application/json':['.json']}}]
+    }).then(handle=>handle.createWritable()).then(w=>w.write(blob).then(()=>w.close())).catch(()=>{});
+  } else {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Budget_${name}.json`;
+    a.click();
+  }
 }
 
 function loadSession(e){
