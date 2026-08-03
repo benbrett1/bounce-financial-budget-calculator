@@ -179,6 +179,7 @@ const TABS = [
   {id:'transport',label:'Transport'},
   {id:'lifestyle',label:'Lifestyle'},
   {id:'results',label:'📊 Results'},
+  {id:'moneymap',label:'🗺️ Money Map'},
 ];
 
 const PANELS = {
@@ -595,6 +596,75 @@ function buildApp(){
     ${buildNavBtns('transport','results',11)}
   </div>`;
 
+  // MONEY MAP
+  html += `<div class="panel" id="panel-moneymap">
+    <div class="sec-title">Money Map</div>
+    <p style="font-size:0.82rem;color:#666;margin-bottom:20px">How your money flows each fortnight — from income into your accounts.</p>
+    <div class="bc" style="overflow-x:auto;padding:10px">
+      <svg id="money-map-svg" viewBox="0 0 760 415" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:420px;display:block">
+        <defs>
+          <marker id="arr-or" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f68b1f"/></marker>
+          <marker id="arr-pk" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ee3780"/></marker>
+          <marker id="arr-bl" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#3b82f6"/></marker>
+          <marker id="arr-gn" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#059669"/></marker>
+        </defs>
+
+        <!-- INCOME  y=16..92 -->
+        <rect x="280" y="16" width="200" height="76" rx="10" fill="#1a1a1a"/>
+        <text x="380" y="40"  text-anchor="middle" font-size="10" font-weight="700" fill="#ffca38" letter-spacing="1.5" font-family="inherit">INCOME</text>
+        <text x="380" y="63"  text-anchor="middle" font-size="19" font-weight="700" fill="#ffffff" font-family="inherit" id="mm-income">$0 / fn</text>
+        <text x="380" y="82"  text-anchor="middle" font-size="10" fill="#888" font-family="inherit" id="mm-income-ann">$0 per year</text>
+
+        <!-- Arrow Income→Hub  92..152 -->
+        <line x1="380" y1="92" x2="380" y2="148" stroke="#f68b1f" stroke-width="2.5" marker-end="url(#arr-or)"/>
+        <text x="392" y="126" font-size="10" fill="#f68b1f" font-weight="600" font-family="inherit" id="mm-hub-in">$0 / fn</text>
+
+        <!-- MAIN BILLS HUB  y=152..248 -->
+        <rect x="235" y="152" width="290" height="96" rx="10" fill="#fff8ee" stroke="#f68b1f" stroke-width="2"/>
+        <text x="380" y="174" text-anchor="middle" font-size="10" font-weight="700" fill="#f68b1f" letter-spacing="1.2" font-family="inherit">MAIN BILLS HUB</text>
+        <text x="380" y="200" text-anchor="middle" font-size="19" font-weight="700" fill="#1a1a1a" font-family="inherit" id="mm-bills-sub">$0 / fn</text>
+        <text x="380" y="218" text-anchor="middle" font-size="10" fill="#bbb" font-family="inherit" id="mm-bills-ann">$0 / year</text>
+
+        <!-- Connectors from hub bottom (248) → destinations (top 318) -->
+        <!-- Branch horizontal at y=280 -->
+
+        <!-- Hub→Entertainment: down, left, down -->
+        <path d="M380,248 L380,280 L130,280 L130,318" stroke="#ee3780" stroke-width="2" fill="none" marker-end="url(#arr-pk)"/>
+        <text x="248" y="275" text-anchor="middle" font-size="10" fill="#ee3780" font-weight="600" font-family="inherit" id="mm-ent-lbl">$0 / fn</text>
+
+        <!-- Hub→Holiday: straight down -->
+        <line x1="380" y1="248" x2="380" y2="318" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-bl)"/>
+        <text x="394" y="288" font-size="10" fill="#3b82f6" font-weight="600" font-family="inherit" id="mm-hol-lbl">$0 / fn</text>
+
+        <!-- Hub→Savings: down, right, down -->
+        <path d="M380,248 L380,280 L630,280 L630,318" stroke="#059669" stroke-width="2" fill="none" marker-end="url(#arr-gn)"/>
+        <text x="512" y="275" text-anchor="middle" font-size="10" fill="#059669" font-weight="600" font-family="inherit" id="mm-sav-lbl">$0 / fn</text>
+
+        <!-- ENTERTAINMENT  y=318..406 -->
+        <rect x="28" y="318" width="204" height="88" rx="10" fill="#ffffff" stroke="#ee3780" stroke-width="2"/>
+        <text x="130" y="340" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ee3780" letter-spacing="1" font-family="inherit">ENTERTAINMENT</text>
+        <text x="130" y="364" text-anchor="middle" font-size="19" font-weight="700" fill="#1a1a1a" font-family="inherit" id="mm-ent">$0 / fn</text>
+        <text x="130" y="382" text-anchor="middle" font-size="10" fill="#bbb" font-family="inherit" id="mm-ent-ann">$0 / year</text>
+
+        <!-- HOLIDAY ACCOUNT  y=318..406 -->
+        <rect x="278" y="318" width="204" height="88" rx="10" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+        <text x="380" y="340" text-anchor="middle" font-size="9.5" font-weight="700" fill="#3b82f6" letter-spacing="1" font-family="inherit">HOLIDAY ACCOUNT</text>
+        <text x="380" y="364" text-anchor="middle" font-size="19" font-weight="700" fill="#1a1a1a" font-family="inherit" id="mm-hol">$0 / fn</text>
+        <text x="380" y="382" text-anchor="middle" font-size="10" fill="#bbb" font-family="inherit" id="mm-hol-ann">$0 / year</text>
+
+        <!-- SAVINGS  y=318..406 -->
+        <rect x="528" y="318" width="204" height="88" rx="10" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+        <text x="630" y="340" text-anchor="middle" font-size="9.5" font-weight="700" fill="#059669" letter-spacing="1" font-family="inherit">SAVINGS</text>
+        <text x="630" y="364" text-anchor="middle" font-size="19" font-weight="700" fill="#1a1a1a" font-family="inherit" id="mm-sav">$0 / fn</text>
+        <text x="630" y="382" text-anchor="middle" font-size="10" fill="#bbb" font-family="inherit" id="mm-sav-ann">$0 / year</text>
+      </svg>
+    </div>
+    <div class="nav-btns">
+      <button class="nbtn" onclick="showPanel('results')">← Back to Results</button>
+      <span></span>
+    </div>
+  </div>`;
+
   // RESULTS
   html += `<div class="panel" id="panel-results">
     <div class="sec-title">Results Summary</div>
@@ -611,6 +681,10 @@ function buildApp(){
       <button class="export-btn" id="copyTableBtn" onclick="copyTable();showWordTip()">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Export Table for Word
+      </button>
+      <button class="export-btn" onclick="exportMyProsperity()" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 4px 12px rgba(37,99,235,0.3)">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Export Categories for MyProsperity
       </button>
     </div>
     <div class="nav-btns"><button class="nbtn" onclick="showPanel('lifestyle')">← Back to Lifestyle</button><span></span></div>
@@ -829,7 +903,44 @@ function calculate(){
   });
 
   // Store for results
-  window._calc = {totalIncome,totalExpenses,surplus,homeTotal,debtsTotal,ipTotal,scTotal,childrenTotal,petsTotal,edTotal,healthTotal,transportTotal,lifestyleTotal};
+  const entAnn = ['ls_entertainment','ls_smoking','ls_gambling','lsp_entertainment','lsp_smoking','lsp_gambling'].reduce((s,id)=>s+ann(id),0);
+  window._calc = {totalIncome,totalExpenses,surplus,homeTotal,debtsTotal,ipTotal,scTotal,childrenTotal,petsTotal,edTotal,healthTotal,transportTotal,lifestyleTotal,lsYouTotal,lsPartnerTotal,holidayAnn:ann('lsj_holidays'),entAnn};
+  updateMoneyMap();
+}
+
+function updateMoneyMap(){
+  const c = window._calc || {};
+  const fn  = n => '$' + Math.round(Math.abs(n)).toLocaleString('en-AU') + ' / fn';
+  const ann = n => '$' + Math.round(Math.abs(n)).toLocaleString('en-AU') + ' / year';
+  const fmt = n => '$' + Math.round(Math.abs(n)).toLocaleString('en-AU');
+
+  const incFn  = (c.totalIncome||0) / 26;
+  const entFn  = (c.entAnn||0) / 26;
+  const holFn  = (c.holidayAnn||0) / 26;
+  const savFn  = (c.surplus||0) / 26;
+  const billsFn = ((c.totalExpenses||0) - (c.entAnn||0) - (c.holidayAnn||0)) / 26;
+
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+
+  set('mm-income',     fn(incFn));
+  set('mm-income-ann', ann(c.totalIncome||0));
+  set('mm-hub-in',     fn(incFn));
+  set('mm-bills-sub',  '$' + Math.round(Math.abs(billsFn)).toLocaleString('en-AU') + ' / fn');
+  set('mm-bills-ann',  '$' + Math.round(Math.abs(billsFn * 26)).toLocaleString('en-AU') + ' / year');
+  set('mm-ent-lbl',    fn(entFn));
+  set('mm-hol-lbl',    fn(holFn));
+  set('mm-sav-lbl',    fn(savFn));
+  set('mm-ent',        fn(entFn));
+  set('mm-ent-ann',    ann(c.entAnn||0));
+  set('mm-hol',        fn(holFn));
+  set('mm-hol-ann',    ann(c.holidayAnn||0));
+  set('mm-sav',        fn(savFn));
+  set('mm-sav-ann',    ann(c.surplus||0));
+
+  // Colour savings red if negative
+  const savEl = document.getElementById('mm-sav');
+  if(savEl) savEl.setAttribute('fill', savFn < 0 ? '#dc2626' : '#1a1a1a');
+  const savBox = document.querySelector('#money-map-svg rect:last-of-type');
 }
 
 function updateResults(){
@@ -1061,6 +1172,171 @@ td, th { padding:1px 4px; mso-font-charset:0; }
   a.href = URL.createObjectURL(blob);
   a.download = `Budget_${name}.doc`;
   a.click();
+}
+
+function exportMyProsperity(){
+  calculate();
+
+  const numVehicles  = parseInt(document.getElementById('numVehicles')?.value||0);
+  const numChildren  = parseInt(document.getElementById('numChildren')?.value||0);
+  const numProperties= parseInt(document.getElementById('numProperties')?.value||0);
+  const homeType     = document.querySelector('input[name="homeType"]:checked')?.value||'renter';
+
+  function sumAnn(ids){ return ids.reduce((s,id)=>s+ann(id),0); }
+
+  const cats = {};
+  function addTo(cat, ids){ cats[cat]=(cats[cat]||0)+sumAnn(ids); }
+
+  // HOME EXPENSES
+  if(homeType==='renter') addTo('Rent',['hm_rent',...dynIds('dyn-home-renter-rows')]);
+  else addTo('Loans',['hm_mortgage',...dynIds('dyn-home-owner-rows')]);
+  addTo('Utilities',['hm_gas','hm_elec','hm_water','hm_rates','hm_body_corp','hm_pool','hm_garden']);
+  addTo('Insurance',['hm_contents_ins']);
+  addTo('Home Maintenance',['hm_maintenance','hm_cleaner',...dynIds('dyn-home-bills-rows'),...dynIds('dyn-home-gen-rows')]);
+  addTo('Home Improvement',['hm_improvement']);
+  addTo('Groceries',['hm_groceries','hm_mealkits']);
+  addTo('Cable/Satellite Services',['hm_telephone','hm_internet','hm_streaming']);
+  addTo('Entertainment/Restaurants & Dining',['hm_newspaper']);
+  addTo('Online Services',['hm_appsubs']);
+
+  // DEBTS
+  addTo('Loans',['d_cc1','d_cc2','d_pl1','d_pl2','d_bnpl',...dynIds('dyn-debts-rows')]);
+
+  // INVESTMENT PROPERTY
+  for(let n=1;n<=numProperties;n++){
+    addTo('Utilities',[`ip${n}_mgmt`,`ip${n}_body`,`ip${n}_water`,`ip${n}_rates`,`ip${n}_pool`,`ip${n}_garden`,...dynIds(`dyn-ip${n}-rows`)]);
+    addTo('Loans',[`ip${n}_mortgage`]);
+    addTo('Home Maintenance',[`ip${n}_maint`]);
+    addTo('Insurance',[`ip${n}_insurance`]);
+  }
+
+  // SELF CARE
+  addTo('Personal Care',['sc_mani','sc_facial','sc_massage','sc_lashes','sc_makeup',...dynIds('dyn-sc1-rows'),'sc_haircuts','sc_botox','sc_laser','sc_cosmetic',...dynIds('dyn-sc2-rows')]);
+
+  // CHILDREN
+  for(let n=1;n<=numChildren;n++){
+    addTo('Child/Dependent Expenses',[`ch${n}_childcare`,`ch${n}_sport`,`ch${n}_afterschool`,`ch${n}_activities`,`ch${n}_schoolstart`,`ch${n}_fees`,`ch${n}_support`,...dynIds(`dyn-ch${n}-rows`)]);
+    addTo('Healthcare/Medical',[`ch${n}_health`]);
+    addTo('Clothing/Shoes',[`ch${n}_clothes`]);
+  }
+
+  // PETS
+  addTo('Pet Care',['pt_food','pt_insurance','pt_medication','pt_wash','pt_daycare',...dynIds('dyn-pets1-rows'),'pt_vet','pt_flea','pt_vaccinations','pt_dental','pt_registration',...dynIds('dyn-pets2-rows')]);
+
+  // EDUCATION
+  addTo('Office Supplies',['ed_stationary']);
+  addTo('Travel',['ed_travel']);
+  addTo('Education',['ed_course','ed_books',...dynIds('dyn-ed1-rows'),...dynIds('dyn-ed2-rows')]);
+
+  // HEALTH
+  addTo('Healthcare/Medical',['h_medication','h_counselling','h_physio','h_medical_fund',...dynIds('dyn-h1-rows'),...dynIds('dyn-h2-rows')]);
+  addTo('Insurance',['h_insurance','h_life_ins']);
+  addTo('Gym',['h_gym','h_pt']);
+
+  // TRANSPORT
+  for(let n=1;n<=numVehicles;n++){
+    addTo('Petrol/Fuel',[`v${n}_petrol`]);
+    addTo('Automotive Expenses',[`v${n}_tolls`,`v${n}_wash`,`v${n}_rego`,`v${n}_service`,`v${n}_accessories`,...dynIds(`dyn-v${n}-rows`)]);
+    addTo('Loans',[`v${n}_loan`]);
+    addTo('Insurance',[`v${n}_insurance`]);
+  }
+  addTo('Travel',['tr_uber','tr_public',...dynIds('dyn-transit-rows')]);
+
+  // LIFESTYLE
+  addTo('Entertainment/Restaurants & Dining',['ls_entertainment','ls_smoking','ls_gambling',...dynIds('dyn-ls-you-rows'),'lsp_entertainment','lsp_smoking','lsp_gambling',...dynIds('dyn-ls-partner-rows'),...dynIds('dyn-ls-joint-rows')]);
+  addTo('Clothing/Shoes',['ls_clothing','lsp_clothing']);
+  addTo('Business Miscellaneous',['ls_memberships','lsp_memberships','lsj_accounting']);
+  addTo('Holiday',['lsj_holidays']);
+  addTo('Gifts',['lsj_gifts']);
+  addTo('Charitable Giving',['lsj_charity']);
+  addTo('Electronics',['lsj_electronics']);
+
+  // Ordered list of categories (MyProsperity order)
+  const ORDER = [
+    'Automotive Expenses','Business Miscellaneous','Cable/Satellite Services',
+    'Charitable Giving','Child/Dependent Expenses','Clothing/Shoes','Education',
+    'Electronics','Entertainment/Restaurants & Dining','Gifts','Groceries','Gym',
+    'Healthcare/Medical','Holiday','Home Improvement','Home Maintenance','Insurance',
+    'Loans','Office Supplies','Online Services','Personal Care','Pet Care',
+    'Petrol/Fuel','Postage and Shipping','Rent','Travel','Utilities'
+  ];
+
+  const fC = n => '$' + Math.round(Math.abs(n)).toLocaleString('en-AU');
+  const OG = '#FCE4D6', OGB = '#F4B183', DARK = '#833C00';
+  const base = 'font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.0;';
+  const p = '1px 6px', b = `1px solid ${OGB}`, bL = '1px solid #e5e7eb';
+  const S = {
+    hdr:  `${base}background:${DARK};color:#fff;padding:${p};font-weight:bold;border:${b}`,
+    hdrR: `${base}background:${DARK};color:#fff;padding:${p};font-weight:bold;text-align:right;border:${b}`,
+    row:  `${base}padding:${p};border:${bL}`,
+    rowR: `${base}padding:${p};border:${bL};text-align:right`,
+    rowA: `${base}padding:${p};border:${bL};background:#fdf7f4`,
+    rowAR:`${base}padding:${p};border:${bL};text-align:right;background:#fdf7f4`,
+    tot:  `${base}background:${OGB};padding:${p};font-weight:bold;border:${b}`,
+    totR: `${base}background:${OGB};padding:${p};font-weight:bold;text-align:right;border:${b}`,
+  };
+  const F = 'font-family:Calibri,Arial,sans-serif;font-size:11pt';
+  const sp = (t,extra='') => `<span style="${F};${extra}">${t}</span>`;
+
+  const rows = [];
+  let ri = 0, grandTotal = 0;
+  const client = document.getElementById('clientName').value || 'Client';
+  const today  = new Date().toLocaleDateString('en-AU');
+
+  rows.push(`<tr>
+    <td colspan="3" style="${base}background:${DARK};color:#fff;padding:4px 6px;font-size:13pt;font-weight:bold;border:${b}">${sp(`${client} — MyProsperity Budget Categories`,'font-size:13pt;font-weight:bold;color:#fff')}</td>
+  </tr>`);
+  rows.push(`<tr>
+    <td colspan="3" style="${base}background:${OG};color:${DARK};padding:${p};border:${b}">${sp(`Prepared: ${today}`,'color:#833C00')}</td>
+  </tr>`);
+  rows.push(`<tr>
+    <th style="${S.hdr}">${sp('Category','font-weight:bold')}</th>
+    <th style="${S.hdrR}">${sp('Monthly','font-weight:bold')}</th>
+    <th style="${S.hdrR}">${sp('Annual','font-weight:bold')}</th>
+  </tr>`);
+
+  ORDER.forEach(cat => {
+    const annual = cats[cat] || 0;
+    if(!annual) return;
+    grandTotal += annual;
+    const alt = ri++%2===1;
+    rows.push(`<tr>
+      <td style="${alt?S.rowA:S.row}">${sp(cat)}</td>
+      <td style="${alt?S.rowAR:S.rowR}">${sp(fC(annual/12))}</td>
+      <td style="${alt?S.rowAR:S.rowR}">${sp(fC(annual))}</td>
+    </tr>`);
+  });
+
+  rows.push(`<tr>
+    <td style="${S.tot}">${sp('TOTAL','font-weight:bold')}</td>
+    <td style="${S.totR}">${sp(fC(grandTotal/12),'font-weight:bold')}</td>
+    <td style="${S.totR}">${sp(fC(grandTotal),'font-weight:bold')}</td>
+  </tr>`);
+
+  const table = `<table style="border-collapse:collapse;width:100%;font-family:Calibri,Arial,sans-serif;font-size:11pt">
+    <thead></thead><tbody>${rows.join('')}</tbody></table>`;
+
+  const doc = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="ProgId" content="Word.Document">
+<style>
+@page WordSection1 { size:21cm 29.7cm; margin:1.5cm; }
+div.WordSection1 { page:WordSection1; }
+body, p, td, th { font-family:Calibri,sans-serif; font-size:11.0pt; margin:0; }
+table { border-collapse:collapse; width:100%; }
+td, th { padding:1px 6px; mso-font-charset:0; }
+</style>
+</head>
+<body><div class="WordSection1">${table}</div></body></html>`;
+
+  const name = client.replace(/\s+/g,'_');
+  const blob = new Blob([doc], {type:'application/msword'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `MyProsperity_${name}.doc`;
+  a.click();
+  showWordTip();
 }
 
 function exportExcel(){
