@@ -1177,9 +1177,6 @@ td, th { padding:1px 4px; mso-font-charset:0; }
 function exportMyProsperity(){
   calculate();
 
-  const numVehicles  = parseInt(document.getElementById('numVehicles')?.value||0);
-  const numChildren  = parseInt(document.getElementById('numChildren')?.value||0);
-  const numProperties= parseInt(document.getElementById('numProperties')?.value||0);
   const homeType     = document.querySelector('input[name="homeType"]:checked')?.value||'renter';
 
   function sumAnn(ids){ return ids.reduce((s,id)=>s+ann(id),0); }
