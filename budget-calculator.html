@@ -455,7 +455,7 @@ function buildApp(){
         ${buildInputRow({id:'hm_groceries',label:'Groceries',freq:'fortnightly'})}
         ${buildInputRow({id:'hm_telephone',label:'Telephone',freq:'fortnightly'})}
         ${buildInputRow({id:'hm_internet',label:'Internet',freq:'fortnightly'})}
-        ${buildInputRow({id:'hm_streaming',label:'Streaming Services',freq:'fortnightly'})}
+        ${buildInputRow({id:'hm_streaming',label:'Streaming Services <a href="https://streaming-calculator.netlify.app/" target="_blank" rel="noopener" title="Calculate your streaming costs" style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#e0e0e0;color:#666;font-size:0.65rem;font-weight:700;text-decoration:none;vertical-align:middle;flex-shrink:0;line-height:1" onmouseover="this.style.background=\'#ffca38\';this.style.color=\'#1a1a1a\'" onmouseout="this.style.background=\'#e0e0e0\';this.style.color=\'#666\'">↗</a>',freq:'fortnightly'})}
         ${buildInputRow({id:'hm_cleaner',label:'Cleaner',freq:'fortnightly'})}
         ${buildInputRow({id:'hm_newspaper',label:'Newspaper Subscriptions',freq:'fortnightly'})}
         ${buildInputRow({id:'hm_appsubs',label:'App / Computer Subscriptions',freq:'fortnightly'})}
@@ -608,10 +608,15 @@ function buildApp(){
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export to Excel
       </button>
-      <button class="export-btn" id="copyTableBtn" onclick="copyTable()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Export Table for Word
-      </button>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="export-btn" id="copyTableBtn" onclick="copyTable();showWordTip()" style="margin-bottom:0">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Export Table for Word
+        </button>
+        <div id="word-tip" style="display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:0.78rem;color:#92400e;max-width:320px;line-height:1.4">
+          💡 When pasting into Word, right-click and choose <strong>Paste → Keep Source Formatting</strong> to preserve the table colours and layout.
+        </div>
+      </div>
     </div>
     <div class="nav-btns"><button class="nbtn" onclick="showPanel('lifestyle')">← Back to Lifestyle</button><span></span></div>
   </div>`;
@@ -872,6 +877,19 @@ function updateResults(){
 
 function updateClientName(){}
 
+function showWordTip(){
+  const tip = document.getElementById('word-tip');
+  if(!tip) return;
+  tip.style.display = 'block';
+  tip.style.opacity = '1';
+  clearTimeout(tip._hideTimer);
+  tip._hideTimer = setTimeout(()=>{
+    tip.style.transition = 'opacity 0.6s';
+    tip.style.opacity = '0';
+    setTimeout(()=>{ tip.style.display='none'; tip.style.transition=''; }, 650);
+  }, 6000);
+}
+
 function copyTable(){
   calculate();
   const c = window._calc || {};
@@ -1003,6 +1021,7 @@ function copyTable(){
     subHead(`Vehicle ${n}`);
     addFields([`v${n}_petrol`,`v${n}_tolls`,`v${n}_loan`,`v${n}_wash`,`v${n}_insurance`,`v${n}_rego`,`v${n}_service`,`v${n}_accessories`,...dynIds(`dyn-v${n}-rows`)]);
   }
+  subHead('Public Transport / Rideshare');
   addFields(['tr_uber','tr_public',...dynIds('dyn-transit-rows')]);
   addTotal('Transport', c.transportTotal||0);
 
