@@ -1011,7 +1011,7 @@ function copyTable(){
     const editable = labelEl.querySelector('.editable-label');
     if(editable) return editable.textContent.trim();
     const clone = labelEl.cloneNode(true);
-    clone.querySelectorAll('.tip,.def-icon').forEach(n=>n.remove());
+    clone.querySelectorAll('.tip,.def-icon,a').forEach(n=>n.remove());
     return clone.textContent.trim();
   }
 
